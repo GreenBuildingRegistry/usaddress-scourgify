@@ -6,11 +6,9 @@ All rights reserved
 ..codeauthor::Fable Turas <fable@raintechpdx.com>
 
 """
-# Imports from Third Party Modules
-from yamlconf import Config, ConfigError
-
 # Local Imports
 from frozendict import frozendict
+from yamlconf import Config, ConfigError
 
 KNOWN_ODDITIES = frozendict({})
 ABNORMAL_OCCUPANCY_ABBRVS = frozendict({})

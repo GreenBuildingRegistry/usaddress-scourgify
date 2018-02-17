@@ -8,11 +8,8 @@ Unit tests for scourgify.
 """
 
 # Imports from Standard Library
-from unittest import TestCase, mock
 from collections import OrderedDict
-
-# Imports from Third Party Modules
-from yamlconf import ConfigError
+from unittest import TestCase, mock
 
 # Local Imports
 from scourgify import address_constants
@@ -50,6 +47,7 @@ from scourgify.validations import (
     validate_parens_groups_parsed,
     validate_us_postal_code_format,
 )
+from yamlconf import ConfigError
 
 # Constants
 SERVICE = 'GBR Test Normalization'
