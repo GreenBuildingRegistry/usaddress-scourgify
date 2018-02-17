@@ -1,0 +1,7 @@
+
+KNOWN_ODDITIES:
+    'developed by HOST': ''
+    ', UN ': ' UNIT '
+
+OCCUPANCY_TYPE_ABBREVIATIONS:
+    'UN': 'UNIT'
