@@ -113,7 +113,8 @@ STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 
 # Public Classes and Functions
 
-def normalize_address_record(address, addr_map=None, addtl_funcs=None):
+def normalize_address_record(address, addr_map=None, addtl_funcs=None,
+                             strict=True):
     # type: (Union[str, Mapping[str, str]]) -> Mapping[str, str]
     """Normalize an address according to USPS pub. 28 standards.
 
@@ -137,6 +138,8 @@ def normalize_address_record(address, addr_map=None, addtl_funcs=None):
     :param addtl_funcs: optional sequence of funcs that take string for further
         processing and return line1 and line2 strings
     :type addtl_funcs: Sequence[Callable[str, (str, str)]]
+    :param strict: bool indicating strict handling of components address parts
+        city, state and postal_code, vs city and state OR postal_code
     :return: address dict containing parsed and normalized address values.
     :rtype: Mapping[str, str]
     """
@@ -144,7 +147,7 @@ def normalize_address_record(address, addr_map=None, addtl_funcs=None):
         return normalize_addr_str(address, addtl_funcs=addtl_funcs)
     else:
         return normalize_addr_dict(
-            address, addr_map=addr_map, addtl_funcs=addtl_funcs
+            address, addr_map=addr_map, addtl_funcs=addtl_funcs, strict=strict
         )
 
 
@@ -232,7 +235,8 @@ def normalize_addr_str(addr_str,         # type: str
         return addr_rec
 
 
-def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None):
+def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None,
+                        strict=True):
     # type: (Mapping[str, str]) -> Mapping[str, str]
     """Normalize an address from dict or dict-like object.
 
@@ -249,12 +253,14 @@ def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None):
     :param addtl_funcs: optional sequence of funcs that take string for further
         processing and return line1 and line2 strings
     :type addtl_funcs: Sequence[Callable[str, (str, str)]]
+    :param strict: bool indicating strict handling of components address parts
+        city, state and postal_code, vs city and state OR postal_code
     :return: address dict with normalized, uppercase address values.
     :rtype: Mapping[str, str]
     """
     if addr_map:
         addr_dict = {key: addr_dict.get(val) for key, val in addr_map.items()}
-    addr_dict = validate_address_components(addr_dict)
+    addr_dict = validate_address_components(addr_dict, strict=strict)
 
     # line 1 and line 2 elements are combined to ensure consistent processing
     # whether the line 2 elements are pre-parsed or included in line 1
