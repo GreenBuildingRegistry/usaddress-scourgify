@@ -265,9 +265,10 @@ def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None,
     # line 1 and line 2 elements are combined to ensure consistent processing
     # whether the line 2 elements are pre-parsed or included in line 1
     addr_str = get_addr_line_str(addr_dict, comma_separate=True)
+    postal_code = addr_dict.get('postal_code')
     zipcode = validate_us_postal_code_format(
-        addr_dict.get('postal_code'), addr_dict
-    )
+        postal_code, addr_dict
+    ) if postal_code else None
     city = addr_dict.get('city')
     state = addr_dict.get('state')
     try:
