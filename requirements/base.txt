@@ -1,5 +1,5 @@
 usaddress>=0.5.9
 geocoder>=1.22.6
 frozendict>=1.2
-yaml-config==0.1.0
+yaml-config==0.1.1
 typing==3.6.1
