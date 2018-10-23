@@ -180,7 +180,7 @@ def clean_upper(text,                           # type: Any
     if not isinstance(text, str):  # pragma: no cover
         text = str(text)
     # catch and convert fractions
-    text = unicodedata.normalize('NFKD', text)
+    text = unicodedata.normalize('NFKD', unicode(text))
     text = text.translate({8260: '/'})
 
     # evaluate string without commas (,) or ampersand (&) to determine if
