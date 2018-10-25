@@ -194,8 +194,8 @@ def clean_upper(text,                           # type: Any
             if (unicodedata.category(char).startswith(removal_cats)
                     and ord(char) not in exclude):
                 text = text.translate({ord(char): None})
-            elif unicodedata.category(char).startswith('Pd'):
-                text = text.translate({ord(char): '-'})
+            #elif unicodedata.category(char).startswith('Pd'):
+            #    text = text.translate({ord(char): '-'})
     join_char = ' '
     if strip_spaces:
         join_char = ''
