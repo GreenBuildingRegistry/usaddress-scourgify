@@ -20,6 +20,12 @@ from scourgify.address_constants import (
     PROBLEM_ST_TYPE_ABBRVS,
 )
 
+# Python 2.x compatibility hack
+try:
+    from __builtin__ import unicode as uc_type
+except ImportError:
+    uc_type = str
+
 # Setup
 
 # Constants
@@ -177,11 +183,11 @@ def clean_upper(text,                           # type: Any
     """
     exclude = exclude or []
     # coerce ints etc to str
-    if not isinstance(text, str):  # pragma: no cover
-        text = str(text)
+    if not isinstance(text, uc_type):  # pragma: no cover
+        text = uc_type(text)
     # catch and convert fractions
     text = unicodedata.normalize('NFKD', text)
-    text = text.translate({8260: '/'})
+    text = text.translate({8260: uc_type('/')})
 
     # evaluate string without commas (,) or ampersand (&) to determine if
     # further processing is necessary
@@ -195,7 +201,7 @@ def clean_upper(text,                           # type: Any
                     and ord(char) not in exclude):
                 text = text.translate({ord(char): None})
             elif unicodedata.category(char).startswith('Pd'):
-                text = text.translate({ord(char): '-'})
+                text = text.translate({ord(char): uc_type('-')})
     join_char = ' '
     if strip_spaces:
         join_char = ''
