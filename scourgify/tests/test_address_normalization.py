@@ -9,7 +9,12 @@ Unit tests for scourgify.
 
 # Imports from Standard Library
 from collections import OrderedDict
-from unittest import TestCase, mock
+
+try:
+    from unittest import TestCase, mock
+except ImportError:
+    from unittest import TestCase
+    import mock
 
 # Local Imports
 from scourgify import address_constants
