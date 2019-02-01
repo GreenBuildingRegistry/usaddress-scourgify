@@ -1,7 +1,7 @@
 usaddress-scourgify
 ===================
 
-A Python library for cleaning/normalizing US addresses following USPS pub 28 and RESO guidelines.
+A Python3.x library for cleaning/normalizing US addresses following USPS pub 28 and RESO guidelines.
 
 
 
@@ -66,7 +66,7 @@ Since geocoder accepts an address string, if your address is in dict format you 
 
 Installation
 ------------
-
+Requires Python3.x.
 
 ``pip install usaddress-scourgify``
 
@@ -80,6 +80,7 @@ To use get_geocoder_normalized_addr, set the GOOGLE_API_KEY environment variable
 
 Contributing
 ------------
+Create a new branch to hold your change; no pull requests submitted directly to dev or master will be approved.  Please include a comment explain the issue your pull request solves. Make sure all appropriate test, and tox, updates are included and that all tests are passing.
 
 License
 -------
