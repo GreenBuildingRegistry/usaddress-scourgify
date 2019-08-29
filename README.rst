@@ -35,13 +35,13 @@ Both functions take an address string, or a dict-like object, and return an addr
 
 expected output
 
-```{
+``{
             'address_line_1': '123 SW MAIN ST',
             'address_line_2': 'UNIT 2'
             'city': 'BORING',
             'state': 'OR',
             'postal_code': '97203'
-        }```
+        }``
 
 normalized_address_record() uses the included processing functions to remove unacceptable special characters, extra spaces, predictable abnormal character sub-strings and phrases. It also abbreviates directional indicators and street types according to the abbreviation mappings found in address_constants.  If applicable, line 2 address elements (ie: Apt, Unit) are separated from line 1 inputs and standard occupancy type abbreviations are applied.
 
