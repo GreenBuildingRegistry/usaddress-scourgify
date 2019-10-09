@@ -141,6 +141,7 @@ def strip_occupancy_type(addr_line_2):
     :rtype: str
     """
     if addr_line_2:
+        addr_line_2 = addr_line_2.replace('#', '').strip()
         parts = str(addr_line_2).split()
         types = (
             list(OCCUPANCY_TYPE_ABBREVIATIONS.keys())
@@ -149,7 +150,6 @@ def strip_occupancy_type(addr_line_2):
         if parts and len(parts) > 1:
             if parts[0] in types:
                 addr_line_2 = ' '.join(parts[1:])
-                addr_line_2 = addr_line_2.lstrip('#').strip()
     return addr_line_2
 
 

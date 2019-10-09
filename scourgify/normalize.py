@@ -17,7 +17,7 @@ Provides functions to normalize address per USPS pub 28 and/or RESO standards.
 # }
 
 # Imports from Standard Library
-from collections import OrderedDict
+from collections import OrderedDict  # noqa # pylint: disable=unused-import
 from typing import (  # noqa # pylint: disable=unused-import
     Callable,
     Mapping,

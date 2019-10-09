@@ -211,7 +211,6 @@ class TestAddressNormalizationUtils(TestCase):
             ('SubaddressIdentifier', 'A1'),
             ('SubaddressType', 'RIGHT')
         ])
-        config_dir = ''
 
     def test_get_parsed_values(self):
         """Test get_parsed_values function."""
