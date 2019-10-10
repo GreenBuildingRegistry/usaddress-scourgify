@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-copyright (c) 2016-2017 Earth Advantage.
+copyright (c) 2016-2019 Earth Advantage.
 All rights reserved
 
 Unit tests for scourgify.
@@ -10,6 +10,9 @@ Unit tests for scourgify.
 # Imports from Standard Library
 from collections import OrderedDict
 from unittest import TestCase, mock
+
+# Imports from Third Party Modules
+from yamlconf import ConfigError
 
 # Local Imports
 from scourgify import address_constants
@@ -47,7 +50,6 @@ from scourgify.validations import (
     validate_parens_groups_parsed,
     validate_us_postal_code_format,
 )
-from yamlconf import ConfigError
 
 # Constants
 SERVICE = 'GBR Test Normalization'

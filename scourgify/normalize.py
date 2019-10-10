@@ -27,9 +27,11 @@ from typing import (  # noqa # pylint: disable=unused-import
     Union,
 )
 
-# Local Imports
+# Imports from Third Party Modules
 import geocoder
 import usaddress
+
+# Local Imports
 from scourgify.address_constants import (
     ABNORMAL_OCCUPANCY_ABBRVS,
     ADDRESS_KEYS,

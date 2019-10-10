@@ -6,7 +6,7 @@ All rights reserved
 ..codeauthor::Fable Turas <fable@raintechpdx.com>
 
 """
-# Local Imports
+# Imports from Third Party Modules
 from frozendict import frozendict
 from yamlconf import Config, ConfigError
 
