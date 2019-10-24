@@ -3,7 +3,7 @@
 """
 copyright (c) 2016-2017 Earth Advantage.
 All rights reserved
-..codeauthor::Fable Turas <fable@raintechpdx.com>
+..codeauthor::Fable Turas <fable@rainsoftware.tech>
 
 [ INSERT DOC STRING ]  # TODO
 """

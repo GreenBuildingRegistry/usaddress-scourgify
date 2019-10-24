@@ -3,7 +3,7 @@
 """
 copyright (c) 2016  Earth Advantage.
 All rights reserved
-..codeauthor::Fable Turas <fable@raintechpdx.com>
+..codeauthor::Fable Turas <fable@rainsoftware.tech>
 
 Provides functions to normalize address per USPS pub 28 and/or RESO standards.
 """

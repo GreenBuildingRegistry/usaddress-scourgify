@@ -22,6 +22,9 @@ Both functions take an address string, or a dict-like object, and return an addr
 
 .. code-block:: python
 
+
+        from scourgify import normalize_address_record
+
         normalize_address_record('123 southwest Main street, Boring, or, 97203')
         
         normalize_address_record({
