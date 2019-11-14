@@ -70,11 +70,24 @@ class TestAddressNormalization(TestCase):
             state='OR',
             postal_code='97009'
         )
-
         self.address_dict = dict(
             address_line_1='123 Nowhere St',
             address_line_2='Suite 0',
             city='Boring',
+            state='OR',
+            postal_code='97009'
+        )
+
+        self.ordinal_addr = dict(
+            address_line_1='4333 NE 113th',
+            city='Boring',
+            state='OR',
+            postal_code='97009'
+        )
+        self.ordinal_expected = dict(
+            address_line_1='4333 NE 113TH',
+            address_line_2=None,
+            city='BORING',
             state='OR',
             postal_code='97009'
         )
@@ -98,6 +111,9 @@ class TestAddressNormalization(TestCase):
 
         result = normalize_address_record(self.address_dict)
         self.assertDictEqual(self.expected, result)
+
+        result = normalize_address_record(self.ordinal_addr)
+        self.assertDictEqual(self.ordinal_expected, result)
 
     def test_normalize_addr_str(self):
         """Test normalize_addr_str function."""

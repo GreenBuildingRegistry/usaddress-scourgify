@@ -17,7 +17,9 @@ Provides functions to normalize address per USPS pub 28 and/or RESO standards.
 # }
 
 # Imports from Standard Library
-from collections import OrderedDict  # noqa # pylint: disable=unused-import
+
+from string import Template
+from collections import OrderedDict
 from typing import (  # noqa # pylint: disable=unused-import
     Callable,
     Mapping,
@@ -158,7 +160,7 @@ def normalize_addr_str(addr_str,         # type: str
                        city=None,        # type: Optional[str]
                        state=None,       # type: Optional[str]
                        zipcode=None,     # type: Optional[str]
-                       addtl_funcs=None  # type: Sequence[Callable[str, (str, str)]]  # noqa
+                       addtl_funcs=None  # type: Sequence[Callable[[str,str], str]]  # noqa
                       ):                                        # noqa
     # type (...) -> Mapping[str, str]                                        # noqa
     # type (...) -> Mapping[str, str]
@@ -203,6 +205,14 @@ def normalize_addr_str(addr_str,         # type: str
                 except ValueError:
                     # try a different additional processing function
                     pass
+
+    if parsed_addr and not parsed_addr.get('StreetName'):
+        addr_dict = dict(
+            address_line_1=addr_str, address_line_2=line2, city=city,
+            state=state, postal_code=zipcode
+        )
+        full_addr = format_address_record(addr_dict)
+        parsed_addr = parse_address_string(full_addr)
 
     if parsed_addr:
         parsed_addr = normalize_address_components(parsed_addr)
@@ -555,7 +565,7 @@ def get_normalized_line_segment(parsed_addr, line_labels):
 
 
 def get_addr_line_str(addr_dict, addr_parts=None, comma_separate=False):
-    # type: (Mapping[str, str], Optional[Sequence]) -> str
+    # type: (Mapping[str, str], Optional[Sequence], bool) -> str
     """Get address 'line' elements as a single string.
 
     Combines 'address_line_1' and 'address_line_2' elements as a single string
@@ -581,6 +591,17 @@ def get_addr_line_str(addr_dict, addr_parts=None, comma_separate=False):
         str(addr_dict[elem]) for elem in addr_parts if addr_dict.get(elem)
     )
     return addr_str
+
+
+def format_address_record(address):
+    # type AddressRecord -> str
+    """Format AddressRecord as string."""
+    address_template = Template('$address')
+    address = dict(address)
+    addr_parts = [
+        str(address[field]) for field in ADDRESS_KEYS if address.get(field)
+    ]
+    return address_template.safe_substitute(address=', '.join(addr_parts))
 
 
 def get_geocoder_normalized_addr(address, addr_keys=ADDRESS_KEYS):
