@@ -19,7 +19,7 @@ Provides functions to normalize address per USPS pub 28 and/or RESO standards.
 # Imports from Standard Library
 
 from string import Template
-from collections import OrderedDict
+from collections import OrderedDict  # noqa # pylint: disable=unused-import
 from typing import (  # noqa # pylint: disable=unused-import
     Callable,
     Mapping,
@@ -212,7 +212,11 @@ def normalize_addr_str(addr_str,         # type: str
             state=state, postal_code=zipcode
         )
         full_addr = format_address_record(addr_dict)
-        parsed_addr = parse_address_string(full_addr)
+        try:
+            parsed_addr = parse_address_string(full_addr)
+        except (usaddress.RepeatedLabelError, AmbiguousAddressError) as err:
+            parsed_addr = None
+            error = err
 
     if parsed_addr:
         parsed_addr = normalize_address_components(parsed_addr)
