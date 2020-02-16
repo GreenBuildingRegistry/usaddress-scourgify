@@ -53,12 +53,15 @@ from scourgify.validations import (
 
 # Constants
 SERVICE = 'GBR Test Normalization'
+
+
 # Helper Functions & Classes
 
 
 # Tests
 class TestAddressNormalization(TestCase):
     """Unit tests for scourgify"""
+
     # pylint:disable=too-many-arguments
 
     def setUp(self):
@@ -198,7 +201,6 @@ class TestAddressNormalizationUtils(TestCase):
     """Unit tests for scourgify utils"""
 
     def setUp(self):
-
         self.address_dict = dict(
             address_line_1='123 Nowhere St',
             address_line_2='Suite 0',
@@ -300,7 +302,7 @@ class TestAddressNormalizationUtils(TestCase):
         """Test normalize_directionals function."""
         unabbr_directional = OrderedDict([
             ('AddressNumber', '123'),
-            ('StreetNamePreDirectional', 'South West', ),
+            ('StreetNamePreDirectional', 'South West',),
             ('StreetName', '100'),
             ('StreetNamePostType', 'STREET')
         ])
@@ -330,25 +332,25 @@ class TestAddressNormalizationUtils(TestCase):
         """Test normalize_street_types function."""
         unabbr_type = OrderedDict([
             ('AddressNumber', '123'),
-            ('StreetNamePreDirectional', 'SW', ),
+            ('StreetNamePreDirectional', 'SW',),
             ('StreetName', 'MAIN'),
             ('StreetNamePostType', 'STREET')
         ])
         abbrev_type = OrderedDict([
             ('AddressNumber', '123'),
-            ('StreetNamePreDirectional', 'SW', ),
+            ('StreetNamePreDirectional', 'SW',),
             ('StreetName', 'MAIN'),
             ('StreetNamePostType', 'AVE')
         ])
         typo_type = OrderedDict([
             ('AddressNumber', '123'),
-            ('StreetNamePreDirectional', 'SW', ),
+            ('StreetNamePreDirectional', 'SW',),
             ('StreetName', 'MAIN'),
             ('StreetNamePostType', 'STROET')
         ])
         no_type = OrderedDict([
             ('AddressNumber', '123'),
-            ('StreetNamePreDirectional', 'SW', ),
+            ('StreetNamePreDirectional', 'SW',),
             ('StreetName', 'MAIN'),
         ])
 
@@ -660,3 +662,80 @@ class TestAddressNormalizationUtils(TestCase):
         ])
         result = parse_address_string(addr_str)
         self.assertEqual(expected, result)
+
+
+class TestAddressWithPoBoxNormalization(TestCase):
+    """Unit tests for scourgify including PO BOX addresses"""
+
+    # pylint:disable=too-many-arguments
+
+    def setUp(self):
+        """setUp"""
+        self.expected = dict(
+            address_line_1='PO BOX 211',
+            address_line_2='1789 HILLTOP RD',
+            city='BIRCHRUNVILLE',
+            state='PA',
+            postal_code='19421'
+        )
+
+        self.address_dict = dict(
+            address_line_1='1789 Hilltop road',
+            address_line_2='P.O. Box 211',
+            city='Birchrunville',
+            state='PA',
+            postal_code='19421'
+        )
+
+        self.poonly_addr = dict(
+            address_line_1='P.O. Box 211',
+            city='Birchrunville',
+            state='PA',
+            postal_code='19421'
+        )
+        self.poonly_expected = dict(
+            address_line_1='PO BOX 211',
+            address_line_2=None,
+            city='BIRCHRUNVILLE',
+            state='PA',
+            postal_code='19421'
+        )
+        self.parseable_addr_str = 'P.O. Box 211, 1789 Hilltop Road, Birchrunville, PA, 19421'
+
+        self.rr_expected = dict(
+            address_line_1='RR 1 BOX 406',
+            address_line_2=None,
+            city='FALLS',
+            state='PA',
+            postal_code='18615-9610'
+        )
+
+        self.rr_str = 'RR 1 Box 406, Falls, PA, 18615-9610'
+
+        self.recipient_expected = dict(
+            address_line_1='123 SMALL ST',
+            address_line_2=None,
+            city='BORING',
+            state='OR',
+            postal_code='97006'
+        )
+
+        self.recipient_dict = dict(
+            address_line_1='c/o Montgomery McCracken Walker & Rhoads, LLP',
+            address_line_2='123 Small St',
+            city='Boring',
+            state='or',
+            postal_code='97006'
+        )
+
+    def test_normalize_pobox(self):
+        result = normalize_address_record(self.parseable_addr_str)
+        self.assertDictEqual(self.expected, result)
+
+    def test_normalize_rr(self):
+        result = normalize_address_record(self.rr_str)
+        self.assertDictEqual(self.rr_expected, result)
+
+    def test_normalize_recipient(self):
+        result = normalize_address_record(self.recipient_dict)
+        self.assertDictEqual(self.recipient_expected, result)
