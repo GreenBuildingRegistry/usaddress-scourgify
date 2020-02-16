@@ -18,8 +18,8 @@ Provides functions to normalize address per USPS pub 28 and/or RESO standards.
 
 # Imports from Standard Library
 
-from string import Template
 from collections import OrderedDict  # noqa # pylint: disable=unused-import
+from string import Template
 from typing import (  # noqa # pylint: disable=unused-import
     Callable,
     Mapping,
@@ -63,6 +63,12 @@ from scourgify.validations import (
 
 # Constants
 
+LINE1_POBOX_USADDRESS_LABELS = (
+    'USPSBoxGroupType',
+    'USPSBoxGroupID',
+    'USPSBoxType',
+    'USPSBoxID',
+)
 LINE1_USADDRESS_LABELS = (
     'AddressNumber',
     'StreetName',
@@ -98,11 +104,6 @@ LAST_LINE_LABELS = (
 )
 
 AMBIGUOUS_LABELS = (
-    'Recipient',
-    'USPSBoxType',
-    'USPSBoxID',
-    'USPSBoxGroupType',
-    'USPSBoxGroupID',
     'NotAddress'
 )
 
@@ -155,13 +156,13 @@ def normalize_address_record(address, addr_map=None, addtl_funcs=None,
         )
 
 
-def normalize_addr_str(addr_str,         # type: str
-                       line2=None,       # type: Optional[str]
-                       city=None,        # type: Optional[str]
-                       state=None,       # type: Optional[str]
-                       zipcode=None,     # type: Optional[str]
+def normalize_addr_str(addr_str,  # type: str
+                       line2=None,  # type: Optional[str]
+                       city=None,  # type: Optional[str]
+                       state=None,  # type: Optional[str]
+                       zipcode=None,  # type: Optional[str]
                        addtl_funcs=None  # type: Sequence[Callable[[str,str], str]]  # noqa
-                      ):                                        # noqa
+                       ):  # noqa
     # type (...) -> Mapping[str, str]                                        # noqa
     # type (...) -> Mapping[str, str]
     """Normalize a complete or partial address string.
@@ -206,7 +207,7 @@ def normalize_addr_str(addr_str,         # type: str
                     # try a different additional processing function
                     pass
 
-    if parsed_addr and not parsed_addr.get('StreetName'):
+    if parsed_addr and not (parsed_addr.get('StreetName') or parsed_addr.get('USPSBoxType')):
         addr_dict = dict(
             address_line_1=addr_str, address_line_2=line2, city=city,
             state=state, postal_code=zipcode
@@ -236,7 +237,14 @@ def normalize_addr_str(addr_str,         # type: str
         line1 = get_normalized_line_segment(
             parsed_addr, LINE1_USADDRESS_LABELS
         )
-        validate_parens_groups_parsed(line1)
+        if line1:
+            validate_parens_groups_parsed(line1)
+        pobox_line1 = get_normalized_line_segment(parsed_addr, LINE1_POBOX_USADDRESS_LABELS)
+        # If there is a PO Box component present, it goes on the first line
+        if pobox_line1:
+            components = [line for line in [line1, line2] if line]
+            line2 = ', '.join(components) if components else None
+            line1 = pobox_line1
     else:
         # line1 is set to addr_str so complete dict can be passed to error.
         line1 = addr_str

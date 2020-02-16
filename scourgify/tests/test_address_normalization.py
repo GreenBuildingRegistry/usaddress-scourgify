@@ -731,6 +731,8 @@ class TestAddressWithPoBoxNormalization(TestCase):
     def test_normalize_pobox(self):
         result = normalize_address_record(self.parseable_addr_str)
         self.assertDictEqual(self.expected, result)
+        result = normalize_address_record(self.poonly_addr)
+        self.assertDictEqual(self.poonly_expected, result)
 
     def test_normalize_rr(self):
         result = normalize_address_record(self.rr_str)
