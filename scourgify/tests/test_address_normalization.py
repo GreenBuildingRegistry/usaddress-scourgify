@@ -193,13 +193,20 @@ class TestAddressNormalization(TestCase):
         with self.assertRaises(AmbiguousAddressError):
             parse_address_string(ambig_addr_str)
 
-    def test_normalize_bad_unit_type(self):
+    def test_normalize_occupancies(self):
         """Test normalize_addr_dict function with handling for occupancy
         type oddities.  This is based on a real life incident; the original
         behavior to allow non-standard unit types to pass through resulted
         in an address validation service also allowing the address to pass
         through even though no unit should have existed on the home.
         """
+        dict_map = {
+            'address_line_1': 'address1',
+            'address_line_2': 'address2',
+            'city': 'city',
+            'state': 'state',
+            'postal_code': 'zip'
+        }
 
         weird_unit = dict(
             address1='123 Nowhere St',
@@ -208,13 +215,6 @@ class TestAddressNormalization(TestCase):
             state='OR',
             zip='97009'
         )
-        dict_map = {
-            'address_line_1': 'address1',
-            'address_line_2': 'address2',
-            'city': 'city',
-            'state': 'state',
-            'postal_code': 'zip'
-        }
         expected = dict(
             address_line_1='123 NOWHERE ST',
             address_line_2='UNIT 345',
@@ -223,6 +223,44 @@ class TestAddressNormalization(TestCase):
             postal_code='97009'
         )
         result = normalize_addr_dict(weird_unit, addr_map=dict_map)
+        self.assertDictEqual(expected, result)
+
+        late_unit_add = dict(
+            address1='123 Nowhere St',
+            address2='345',
+            city='Boring',
+            state='OR',
+            zip='97009'
+        )
+        result = normalize_addr_dict(late_unit_add, addr_map=dict_map)
+        self.assertDictEqual(expected, result)
+
+        expected = dict(
+            address_line_1='123 NOWHERE ST',
+            address_line_2='# 345',
+            city='BORING',
+            state='OR',
+            postal_code='97009'
+        )
+
+        hashtag_unit = dict(
+            address1='123 Nowhere St',
+            address2='# 345',
+            city='Boring',
+            state='OR',
+            zip='97009'
+        )
+        result = normalize_addr_dict(hashtag_unit, addr_map=dict_map)
+        self.assertDictEqual(expected, result)
+
+        hashtag_unit = dict(
+            address1='123 Nowhere St',
+            address2='#345',
+            city='Boring',
+            state='OR',
+            zip='97009'
+        )
+        result = normalize_addr_dict(hashtag_unit, addr_map=dict_map)
         self.assertDictEqual(expected, result)
 
 

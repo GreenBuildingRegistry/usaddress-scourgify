@@ -27,10 +27,11 @@ from scourgify.address_constants import (
 
 # Constants
 # periods (in decimals), hyphens, / , and & are acceptable address components
-ALLOWED_CHARS = [38, 45, 46, 47]   # ord('&') ord('-'), ord('.') and ord('/')
+# ord('&') ord('#') ord('-'), ord('.') and ord('/')
+ALLOWED_CHARS = [35, 38, 45, 46, 47]
 
-# Don't remove ',', '#', '(' or ')' in PRE_CLEAN
-PRECLEAN_EXCLUDE = [35, 40, 41, 44]
+# Don't remove ',', '(' or ')' in PRE_CLEAN
+PRECLEAN_EXCLUDE = [40, 41, 44]
 EXCLUDE_ALL = ALLOWED_CHARS + PRECLEAN_EXCLUDE
 
 STRIP_CHAR_CATS = (
