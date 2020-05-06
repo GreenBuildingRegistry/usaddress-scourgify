@@ -1,5 +1,12 @@
 Changelog
 =========
+0.2.0 [2020-05-06]
+------------------
+* potentially breaking change. Non-standard unit numbers now converted to a default.
+This is based on a real life incident; the original
+behavior to allow non-standard unit types to pass through resulted
+in an address validation service also allowing the address to pass
+through even though no unit should have existed on the home.
 
 0.1.3 [2018-09-09]
 ------------------

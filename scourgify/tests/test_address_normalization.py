@@ -193,6 +193,38 @@ class TestAddressNormalization(TestCase):
         with self.assertRaises(AmbiguousAddressError):
             parse_address_string(ambig_addr_str)
 
+    def test_normalize_bad_unit_type(self):
+        """Test normalize_addr_dict function with handling for occupancy
+        type oddities.  This is based on a real life incident; the original
+        behavior to allow non-standard unit types to pass through resulted
+        in an address validation service also allowing the address to pass
+        through even though no unit should have existed on the home.
+        """
+
+        weird_unit = dict(
+            address1='123 Nowhere St',
+            address2='Ave 345',
+            city='Boring',
+            state='OR',
+            zip='97009'
+        )
+        dict_map = {
+            'address_line_1': 'address1',
+            'address_line_2': 'address2',
+            'city': 'city',
+            'state': 'state',
+            'postal_code': 'zip'
+        }
+        expected = dict(
+            address_line_1='123 NOWHERE ST',
+            address_line_2='UNIT 345',
+            city='BORING',
+            state='OR',
+            postal_code='97009'
+        )
+        result = normalize_addr_dict(weird_unit, addr_map=dict_map)
+        self.assertDictEqual(expected, result)
+
 
 class TestAddressNormalizationUtils(TestCase):
     """Unit tests for scourgify utils"""

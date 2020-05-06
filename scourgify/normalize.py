@@ -515,21 +515,29 @@ def normalize_street_types(parsed_addr):
     return parsed_addr
 
 
-def normalize_occupancy_type(parsed_addr):
+def normalize_occupancy_type(parsed_addr, default=None):
     # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
     """Change occupancy types to accepted abbreviated format.
 
-    No change is made if occupancy types do not conform to common usages per
-    USPS pub 28 appendix C.
+    If there is an occupancy and it does not conform to one of the
+    OCCUPANCY_TYPE_ABBREVIATIONS, occupancy is changed to the generic 'UNIT'.
+    OCCUPANCY_TYPE_ABBREVIATIONS contains common abbreviations per
+    USPS pub 28 appendix C, however, OCCUPANCY_TYPE_ABBREVIATIONS can be
+    customized to allow alternate abbreviations to pass through. (see README)
 
     :param parsed_addr: address parsed into ordereddict per usaddress.
     :type parsed_addr: Mapping
+    :param default: default abbreviation to use for types that fall outside the
+     standard abbreviations. Default is 'UNIT'
     :return: parsed_addr with occupancy types updated to abbreviated format.
     :rtype: dict
     """
+    default = default if default is not None else 'UNIT'
     occupancy_type_label = 'OccupancyType'
     occupancy_type = parsed_addr.get(occupancy_type_label)
     occupancy_type_abbr = OCCUPANCY_TYPE_ABBREVIATIONS.get(occupancy_type)
+    if parsed_addr.get('OccupancyIdentifier') and not occupancy_type_abbr:
+        occupancy_type_abbr = default
     if occupancy_type_abbr:
         parsed_addr[occupancy_type_label] = occupancy_type_abbr
     return parsed_addr
