@@ -29,7 +29,7 @@ Both functions take an address string, or a dict-like object, and return an addr
         
         normalize_address_record({
             'address_line_1': '123 southwest Main street',
-            'address_line_2': 'unit 2'
+            'address_line_2': 'unit 2,
             'city': 'Boring',
             'state': 'or',
             'postal_code': '97203'
