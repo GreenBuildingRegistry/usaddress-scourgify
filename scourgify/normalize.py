@@ -535,7 +535,8 @@ def normalize_occupancy_type(parsed_addr, default=None):
     default = default if default is not None else 'UNIT'
     occupancy_type_label = 'OccupancyType'
     occupancy_type = parsed_addr.pop(occupancy_type_label, None)
-    occupancy_type_abbr = OCCUPANCY_TYPE_ABBREVIATIONS.get(occupancy_type)
+    occupancy_type_abbr = occupancy_type if occupancy_type in OCCUPANCY_TYPE_ABBREVIATIONS.values() \
+        else OCCUPANCY_TYPE_ABBREVIATIONS.get(occupancy_type)
     occupancy_id = parsed_addr.get('OccupancyIdentifier')
     if ((occupancy_id and not occupancy_id.startswith('#'))
             and not occupancy_type_abbr):
