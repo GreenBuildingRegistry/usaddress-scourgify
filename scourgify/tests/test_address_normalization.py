@@ -271,24 +271,24 @@ class TestAddressNormalization(TestCase):
             postal_code='97009'
         )
 
-        secondary_abbreviation = dict(
+        abbreviation = dict(
             address1='123 Nowhere St',
             address2='Apt 345',
             city='Boring',
             state='OR',
             zip='97009'
         )
-        result = normalize_addr_dict(secondary_abbreviation, addr_map=dict_map)
+        result = normalize_addr_dict(abbreviation, addr_map=dict_map)
         self.assertDictEqual(expected, result)
 
-        secondary_abbreviation = dict(
+        full_name = dict(
             address1='123 Nowhere St',
             address2='Apartment 345',
             city='Boring',
             state='OR',
             zip='97009'
         )
-        result = normalize_addr_dict(secondary_abbreviation, addr_map=dict_map)
+        result = normalize_addr_dict(full_name, addr_map=dict_map)
         self.assertDictEqual(expected, result)
 
 
