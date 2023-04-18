@@ -1,7 +1,7 @@
 usaddress-scourgify
 ===================
 
-A Python library for cleaning/normalizing US addresses following USPS pub 28 and RESO guidelines.
+A Python3.x library for cleaning/normalizing US addresses following USPS pub 28 and RESO guidelines.
 
 
 
@@ -15,14 +15,50 @@ Use
 
 ``get_geocoder_normalized_addr()``
 
+or
+
+``NormalizeAddress().normalize()``
+
 to standardize your addresses. (Note: usaddress-scourgify does not make any attempts at address validation.)
 
-Both functions take an address string, or a dict-like object, and return an address dict with all field values in uppercase format mapped to the keys address_line_1, address_line_2, city, state, postal_code.
+Both functions, and the class init, take an address string, or a dict-like object, and return an address dict with all field values in uppercase format mapped to the keys address_line_1, address_line_2, city, state, postal_code... code-block:: python
 
+
+.. code-block:: python
+
+
+        from scourgify import normalize_address_record, NormalizeAddress
+
+        normalize_address_record('123 southwest Main street, Boring, or, 97203')
+        
+        normalize_address_record({
+            'address_line_1': '123 southwest Main street',
+            'address_line_2': 'unit 2,
+            'city': 'Boring',
+            'state': 'or',
+            'postal_code': '97203'
+        })
+
+        NormalizeAddress('123 southwest Main street, Boring, or, 97203').normalize()
+
+expected output
+
+
+.. code-block:: python
+
+       {
+            'address_line_1': '123 SW MAIN ST',
+            'address_line_2': 'UNIT 2'
+            'city': 'BORING',
+            'state': 'OR',
+            'postal_code': '97203'
+        }
 
 normalized_address_record() uses the included processing functions to remove unacceptable special characters, extra spaces, predictable abnormal character sub-strings and phrases. It also abbreviates directional indicators and street types according to the abbreviation mappings found in address_constants.  If applicable, line 2 address elements (ie: Apt, Unit) are separated from line 1 inputs and standard occupancy type abbreviations are applied.
 
 You may supply additional additional processing functions as a list of callable supplied to the addtl_funcs parameter. Any additional functions should take a string address and return a tuple of strings (line1, line2).
+
+Alternately, you may extend the `NormalizeAddress` class to customize the normalization behavior by overriding any of the class' methods.
 
 If your address is in the form of a dict that does not use the keys address_line_1, address_line_2, city, state, and postal_code, you must supply a key map to the addr_map parameter in the format {standard_key: custom_key}
 
@@ -66,7 +102,7 @@ Since geocoder accepts an address string, if your address is in dict format you 
 
 Installation
 ------------
-
+Requires Python3.x.
 
 ``pip install usaddress-scourgify``
 
@@ -80,6 +116,7 @@ To use get_geocoder_normalized_addr, set the GOOGLE_API_KEY environment variable
 
 Contributing
 ------------
+Create a new branch to hold your change; no pull requests submitted directly to dev or master will be approved.  Please include a comment explain the issue your pull request solves. Make sure all appropriate test, and tox, updates are included and that all tests are passing.
 
 License
 -------

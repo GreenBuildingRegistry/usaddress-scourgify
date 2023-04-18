@@ -3,7 +3,7 @@
 """
 copyright (c) 2016-2017 Earth Advantage.
 All rights reserved
-..codeauthor::Fable Turas <fable@raintechpdx.com>
+..codeauthor::Fable Turas <fable@rainsoftware.tech>
 
 [ INSERT DOC STRING ]  # TODO
 """
@@ -46,7 +46,7 @@ def _get_substrings_with_regex(string, pattern=None):
 
 
 # Public Functions
-def validate_address_components(address_dict):
+def validate_address_components(address_dict, strict=True):
     # type: (Mapping[str, str]) -> Mapping[str, str]
     """Validate non-null values for minimally viable address elements.
 
@@ -56,17 +56,26 @@ def validate_address_components(address_dict):
     :param address_dict: dict containing address components having keys
         'address_line_1', 'postal_code', 'city', 'state'
     :type address_dict: Mapping
+    :param strict: bool indicating strict handling of components address parts
+        city, state and postal_code, vs city and state OR postal_code
     :return: address_dict if no errors are raised.
     :rtype: Mapping
     """
+    locality = (
+        address_dict.get('postal_code') and
+        address_dict.get('city') and address_dict.get('state')
+        if strict else
+        address_dict.get('postal_code') or
+        (address_dict.get('city') and address_dict.get('state'))
+    )
     if not address_dict.get('address_line_1'):
         msg = 'Address records must include Line 1 data.'
         raise IncompleteAddressError(msg)
-    elif not (address_dict.get('postal_code')
-              and address_dict.get('city')
-              and address_dict.get('state')):
+    elif not locality:
         msg = (
             'Address records must contain a city, state, and postal_code.'
+            if strict else
+            'Address records must contain a city and state, or a postal_code'
         )
         raise IncompleteAddressError(msg)
     return address_dict

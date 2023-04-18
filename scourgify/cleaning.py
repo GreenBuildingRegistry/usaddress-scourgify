@@ -3,7 +3,7 @@
 """
 copyright (c) 2016-2017 Earth Advantage.
 All rights reserved
-..codeauthor::Fable Turas <fable@raintechpdx.com>
+..codeauthor::Fable Turas <fable@rainsoftware.tech>
 
 [ INSERT DOC STRING ]  # TODO
 """
@@ -12,6 +12,9 @@ All rights reserved
 import re
 import unicodedata
 from typing import Any, Optional, Sequence, Union
+
+# Imports from Third Party Modules
+import usaddress
 
 # Local Imports
 from scourgify.address_constants import (
@@ -24,10 +27,11 @@ from scourgify.address_constants import (
 
 # Constants
 # periods (in decimals), hyphens, / , and & are acceptable address components
-ALLOWED_CHARS = [38, 45, 46, 47]   # ord('&') ord('-'), ord('.') and ord('/')
+# ord('&') ord('#') ord('-'), ord('.') and ord('/')
+ALLOWED_CHARS = [35, 38, 45, 46, 47]
 
-# Don't remove ',', '#', '(' or ')' in PRE_CLEAN
-PRECLEAN_EXCLUDE = [35, 40, 41, 44]
+# Don't remove ',', '(' or ')' in PRE_CLEAN
+PRECLEAN_EXCLUDE = [40, 41, 44]
 EXCLUDE_ALL = ALLOWED_CHARS + PRECLEAN_EXCLUDE
 
 STRIP_CHAR_CATS = (
@@ -131,6 +135,20 @@ def post_clean_addr_str(addr_str):
     return addr_str
 
 
+def _parse_occupancy(addr_line_2):
+    occupancy = None
+    if addr_line_2:
+        parsed = None
+        # first try usaddress parsing labels
+        try:
+            parsed = usaddress.tag(addr_line_2)
+        except usaddress.RepeatedLabelError:
+            pass
+        if parsed:
+            occupancy = parsed[0].get('OccupancyIdentifier')
+    return occupancy
+
+
 def strip_occupancy_type(addr_line_2):
     # type: (str) -> str
     """Strip occupancy type (ie apt, unit, etc) from addr_line_2 string
@@ -140,17 +158,34 @@ def strip_occupancy_type(addr_line_2):
     :return:
     :rtype: str
     """
+    occupancy = None
     if addr_line_2:
-        parts = str(addr_line_2).split()
-        types = (
-            list(OCCUPANCY_TYPE_ABBREVIATIONS.keys())
-            + list(OCCUPANCY_TYPE_ABBREVIATIONS.values())
-        )
-        if parts and len(parts) > 1:
-            if parts[0] in types:
-                addr_line_2 = ' '.join(parts[1:])
-                addr_line_2 = addr_line_2.lstrip('#').strip()
-    return addr_line_2
+        addr_line_2 = addr_line_2.replace('#', '').strip().upper()
+        occupancy = _parse_occupancy(addr_line_2)
+
+        # if that doesn't work, clean abbrevs and try again
+        if not occupancy:
+            parts = str(addr_line_2).split()
+            for p in parts:
+                if p in OCCUPANCY_TYPE_ABBREVIATIONS:
+                    addr_line_2 = addr_line_2.replace(
+                        p, OCCUPANCY_TYPE_ABBREVIATIONS[p]
+                    )
+            occupancy = _parse_occupancy(addr_line_2)
+
+            # if that doesn't work, dissect it manually
+            if not occupancy:
+                occupancy = addr_line_2
+                types = (
+                    list(OCCUPANCY_TYPE_ABBREVIATIONS.keys())
+                    + list(OCCUPANCY_TYPE_ABBREVIATIONS.values())
+                )
+                if parts and len(parts) > 1:
+                    ids = [p for p in parts if p not in types]
+                    print(ids)
+                    occupancy = ' '.join(ids)
+
+    return occupancy
 
 
 def clean_upper(text,                           # type: Any

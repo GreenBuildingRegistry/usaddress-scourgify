@@ -3,7 +3,7 @@
 """
 copyright (c) 2016  Earth Advantage.
 All rights reserved
-..codeauthor::Fable Turas <fable@raintechpdx.com>
+..codeauthor::Fable Turas <fable@rainsoftware.tech>
 
 Provides functions to normalize address per USPS pub 28 and/or RESO standards.
 """
@@ -17,7 +17,9 @@ Provides functions to normalize address per USPS pub 28 and/or RESO standards.
 # }
 
 # Imports from Standard Library
-from collections import OrderedDict
+
+from string import Template
+from collections import OrderedDict  # noqa # pylint: disable=unused-import
 from typing import (  # noqa # pylint: disable=unused-import
     Callable,
     Mapping,
@@ -115,7 +117,8 @@ STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 
 # Public Classes and Functions
 
-def normalize_address_record(address, addr_map=None, addtl_funcs=None):
+def normalize_address_record(address, addr_map=None, addtl_funcs=None,
+                             strict=True):
     # type: (Union[str, Mapping[str, str]]) -> Mapping[str, str]
     """Normalize an address according to USPS pub. 28 standards.
 
@@ -139,6 +142,8 @@ def normalize_address_record(address, addr_map=None, addtl_funcs=None):
     :param addtl_funcs: optional sequence of funcs that take string for further
         processing and return line1 and line2 strings
     :type addtl_funcs: Sequence[Callable[str, (str, str)]]
+    :param strict: bool indicating strict handling of components address parts
+        city, state and postal_code, vs city and state OR postal_code
     :return: address dict containing parsed and normalized address values.
     :rtype: Mapping[str, str]
     """
@@ -146,7 +151,7 @@ def normalize_address_record(address, addr_map=None, addtl_funcs=None):
         return normalize_addr_str(address, addtl_funcs=addtl_funcs)
     else:
         return normalize_addr_dict(
-            address, addr_map=addr_map, addtl_funcs=addtl_funcs
+            address, addr_map=addr_map, addtl_funcs=addtl_funcs, strict=strict
         )
 
 
@@ -155,7 +160,7 @@ def normalize_addr_str(addr_str,         # type: str
                        city=None,        # type: Optional[str]
                        state=None,       # type: Optional[str]
                        zipcode=None,     # type: Optional[str]
-                       addtl_funcs=None  # type: Sequence[Callable[str, (str, str)]]  # noqa
+                       addtl_funcs=None  # type: Sequence[Callable[[str,str], str]]  # noqa
                       ):                                        # noqa
     # type (...) -> Mapping[str, str]                                        # noqa
     # type (...) -> Mapping[str, str]
@@ -201,6 +206,18 @@ def normalize_addr_str(addr_str,         # type: str
                     # try a different additional processing function
                     pass
 
+    if parsed_addr and not parsed_addr.get('StreetName'):
+        addr_dict = dict(
+            address_line_1=addr_str, address_line_2=line2, city=city,
+            state=state, postal_code=zipcode
+        )
+        full_addr = format_address_record(addr_dict)
+        try:
+            parsed_addr = parse_address_string(full_addr)
+        except (usaddress.RepeatedLabelError, AmbiguousAddressError) as err:
+            parsed_addr = None
+            error = err
+
     if parsed_addr:
         parsed_addr = normalize_address_components(parsed_addr)
         zipcode = get_parsed_values(parsed_addr, zipcode, 'ZipCode', addr_str)
@@ -234,7 +251,8 @@ def normalize_addr_str(addr_str,         # type: str
         return addr_rec
 
 
-def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None):
+def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None,
+                        strict=True):
     # type: (Mapping[str, str]) -> Mapping[str, str]
     """Normalize an address from dict or dict-like object.
 
@@ -251,19 +269,22 @@ def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None):
     :param addtl_funcs: optional sequence of funcs that take string for further
         processing and return line1 and line2 strings
     :type addtl_funcs: Sequence[Callable[str, (str, str)]]
+    :param strict: bool indicating strict handling of components address parts
+        city, state and postal_code, vs city and state OR postal_code
     :return: address dict with normalized, uppercase address values.
     :rtype: Mapping[str, str]
     """
     if addr_map:
         addr_dict = {key: addr_dict.get(val) for key, val in addr_map.items()}
-    addr_dict = validate_address_components(addr_dict)
+    addr_dict = validate_address_components(addr_dict, strict=strict)
 
     # line 1 and line 2 elements are combined to ensure consistent processing
     # whether the line 2 elements are pre-parsed or included in line 1
     addr_str = get_addr_line_str(addr_dict, comma_separate=True)
+    postal_code = addr_dict.get('postal_code')
     zipcode = validate_us_postal_code_format(
-        addr_dict.get('postal_code'), addr_dict
-    )
+        postal_code, addr_dict
+    ) if postal_code else None
     city = addr_dict.get('city')
     state = addr_dict.get('state')
     try:
@@ -494,23 +515,47 @@ def normalize_street_types(parsed_addr):
     return parsed_addr
 
 
-def normalize_occupancy_type(parsed_addr):
+def normalize_occupancy_type(parsed_addr, default=None):
     # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
     """Change occupancy types to accepted abbreviated format.
 
-    No change is made if occupancy types do not conform to common usages per
-    USPS pub 28 appendix C.
+    If there is an occupancy and it does not conform to one of the
+    OCCUPANCY_TYPE_ABBREVIATIONS, occupancy is changed to the generic 'UNIT'.
+    OCCUPANCY_TYPE_ABBREVIATIONS contains common abbreviations per
+    USPS pub 28 appendix C, however, OCCUPANCY_TYPE_ABBREVIATIONS can be
+    customized to allow alternate abbreviations to pass through. (see README)
 
     :param parsed_addr: address parsed into ordereddict per usaddress.
     :type parsed_addr: Mapping
+    :param default: default abbreviation to use for types that fall outside the
+     standard abbreviations. Default is 'UNIT'
     :return: parsed_addr with occupancy types updated to abbreviated format.
     :rtype: dict
     """
+    default = default if default is not None else 'UNIT'
     occupancy_type_label = 'OccupancyType'
-    occupancy_type = parsed_addr.get(occupancy_type_label)
-    occupancy_type_abbr = OCCUPANCY_TYPE_ABBREVIATIONS.get(occupancy_type)
+    occupancy_type = parsed_addr.pop(occupancy_type_label, None)
+    occupancy_type_abbr = (
+        occupancy_type
+        if occupancy_type in OCCUPANCY_TYPE_ABBREVIATIONS.values()
+        else OCCUPANCY_TYPE_ABBREVIATIONS.get(occupancy_type)
+    )
+    occupancy_id = parsed_addr.get('OccupancyIdentifier')
+    if ((occupancy_id and not occupancy_id.startswith('#'))
+            and not occupancy_type_abbr):
+        occupancy_type_abbr = default
     if occupancy_type_abbr:
-        parsed_addr[occupancy_type_label] = occupancy_type_abbr
+        parsed_list = list(parsed_addr.items())
+        try:
+            index = parsed_list.index(('OccupancyIdentifier', occupancy_id))
+        except ValueError:
+            msg = (
+                'Address has an occupancy type (ie: Apt, Unit, etc) '
+                'but no occupancy identifier (ie: 101, A, etc)'
+            )
+            raise AddressNormalizationError(msg)
+        parsed_list.insert(index, (occupancy_type_label, occupancy_type_abbr))
+        parsed_addr = OrderedDict(parsed_list)
     return parsed_addr
 
 
@@ -548,7 +593,7 @@ def get_normalized_line_segment(parsed_addr, line_labels):
 
 
 def get_addr_line_str(addr_dict, addr_parts=None, comma_separate=False):
-    # type: (Mapping[str, str], Optional[Sequence]) -> str
+    # type: (Mapping[str, str], Optional[Sequence], bool) -> str
     """Get address 'line' elements as a single string.
 
     Combines 'address_line_1' and 'address_line_2' elements as a single string
@@ -574,6 +619,17 @@ def get_addr_line_str(addr_dict, addr_parts=None, comma_separate=False):
         str(addr_dict[elem]) for elem in addr_parts if addr_dict.get(elem)
     )
     return addr_str
+
+
+def format_address_record(address):
+    # type AddressRecord -> str
+    """Format AddressRecord as string."""
+    address_template = Template('$address')
+    address = dict(address)
+    addr_parts = [
+        str(address[field]) for field in ADDRESS_KEYS if address.get(field)
+    ]
+    return address_template.safe_substitute(address=', '.join(addr_parts))
 
 
 def get_geocoder_normalized_addr(address, addr_keys=ADDRESS_KEYS):
@@ -630,3 +686,144 @@ def get_ordinal_indicator(number):
         return 'rd'
     else:
         return 'th'
+
+
+class NormalizeAddress(object):
+    parse_address_string = staticmethod(parse_address_string)
+    pre_clean_addr_str = staticmethod(pre_clean_addr_str)
+    post_clean_addr_str = staticmethod(post_clean_addr_str)
+    format_address_record = staticmethod(format_address_record)
+    normalize_address_components = staticmethod(normalize_address_components)
+    get_parsed_values = staticmethod(get_parsed_values)
+
+    def __init__(self, address, addr_map=None, addtl_funcs=None, strict=None):
+        self.address = address
+        self.addr_map = addr_map
+        self.addtl_funcs = addtl_funcs
+        self.strict = True if strict is None else strict
+
+    def normalize(self):
+        if isinstance(self.address, str):
+            return self.normalize_addr_str(
+                self.address, addtl_funcs=self.addtl_funcs
+            )
+        else:
+            return self.normalize_addr_dict(
+                self.address, addr_map=self.addr_map,
+                addtl_funcs=self.addtl_funcs, strict=self.strict
+            )
+
+    def normalize_addr_str(self, addr_str,  # type: str
+                           line2=None,  # type: Optional[str]
+                           city=None,  # type: Optional[str]
+                           state=None,  # type: Optional[str]
+                           zipcode=None,  # type: Optional[str]
+                           addtl_funcs=None
+                           # type: Sequence[Callable[[str,str], str]]  # noqa
+                           ):  # noqa
+        # get address parsed into usaddress components.
+        error = None
+        parsed_addr = None
+        addr_str = self.pre_clean_addr_str(addr_str, normalize_state(state))
+        try:
+            parsed_addr = self.parse_address_string(addr_str)
+        except (usaddress.RepeatedLabelError, AmbiguousAddressError) as err:
+            error = err
+            if not line2 and self.addtl_funcs:
+                for func in self.addtl_funcs:
+                    try:
+                        line1, line2 = func(addr_str)
+                        error = False
+                        # send refactored line_1 and line_2 back through
+                        # processing
+                        return self.normalize_addr_str(
+                            line1, line2=line2,
+                            city=city,
+                            state=state, zipcode=zipcode
+                        )
+                    except ValueError:
+                        # try a different additional processing function
+                        pass
+
+        if parsed_addr and not parsed_addr.get('StreetName'):
+            addr_dict = dict(
+                address_line_1=addr_str, address_line_2=line2, city=city,
+                state=state, postal_code=zipcode
+            )
+            full_addr = self.format_address_record(addr_dict)
+            try:
+                parsed_addr = self.parse_address_string(full_addr)
+            except (usaddress.RepeatedLabelError,
+                    AmbiguousAddressError) as err:
+                parsed_addr = None
+                error = err
+
+        if parsed_addr:
+            parsed_addr = self.normalize_address_components(parsed_addr)
+            zipcode = self.get_parsed_values(
+                parsed_addr, zipcode, 'ZipCode', addr_str
+            )
+            city = self.get_parsed_values(
+                parsed_addr, city, 'PlaceName', addr_str
+            )
+            state = self.get_parsed_values(
+                parsed_addr, state, 'StateName', addr_str
+            )
+            state = normalize_state(state)
+
+            # assumes if line2 is passed in that it need not be parsed from
+            # addr_str. Primarily used to allow advanced processing of
+            # otherwise unparsable addresses.
+            line2 = line2 if line2 else get_normalized_line_segment(
+                parsed_addr, LINE2_USADDRESS_LABELS
+            )
+            line2 = self.post_clean_addr_str(line2)
+            # line 1 is fully post cleaned in get_normalized_line_segment.
+            line1 = get_normalized_line_segment(
+                parsed_addr, LINE1_USADDRESS_LABELS
+            )
+            validate_parens_groups_parsed(line1)
+        else:
+            # line1 is set to addr_str so complete dict can be passed to error.
+            line1 = addr_str
+
+        addr_rec = dict(
+            address_line_1=line1, address_line_2=line2, city=city,
+            state=state, postal_code=zipcode
+        )
+        if error:
+            raise UnParseableAddressError(None, None, addr_rec)
+        else:
+            return addr_rec
+
+    def normalize_addr_dict(self, addr_dict, addr_map=None, addtl_funcs=None,
+                            strict=True):
+        if addr_map:
+            addr_dict = {key: addr_dict.get(val) for key, val in
+                         addr_map.items()}
+        addr_dict = validate_address_components(addr_dict, strict=strict)
+
+        # line 1 and line 2 elements are combined to ensure consistent
+        # processing whether the line 2 elements are pre-parsed or
+        # included in line 1
+        addr_str = get_addr_line_str(addr_dict, comma_separate=True)
+        postal_code = addr_dict.get('postal_code')
+        zipcode = validate_us_postal_code_format(
+            postal_code, addr_dict
+        ) if postal_code else None
+        city = addr_dict.get('city')
+        state = addr_dict.get('state')
+        try:
+            address = self.normalize_addr_str(
+                addr_str, city=city, state=state,
+                zipcode=zipcode, addtl_funcs=addtl_funcs
+            )
+        except AddressNormalizationError:
+            addr_str = get_addr_line_str(
+                addr_dict, comma_separate=True, addr_parts=ADDRESS_KEYS
+            )
+            address = self.normalize_addr_str(
+                addr_str, city=city, state=state,
+                zipcode=zipcode, addtl_funcs=addtl_funcs
+            )
+        return address

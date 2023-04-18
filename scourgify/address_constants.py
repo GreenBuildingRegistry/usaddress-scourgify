@@ -3,23 +3,20 @@
 """
 copyright (c) 2016-2017 Earth Advantage.
 All rights reserved
-..codeauthor::Fable Turas <fable@raintechpdx.com>
+..codeauthor::Fable Turas <fable@rainsoftware.tech>
 
 """
 # Imports from Third Party Modules
 from yamlconf import Config, ConfigError
 
-# Local Imports
-from frozendict import frozendict
+KNOWN_ODDITIES = {}
+ABNORMAL_OCCUPANCY_ABBRVS = {}
 
-KNOWN_ODDITIES = frozendict({})
-ABNORMAL_OCCUPANCY_ABBRVS = frozendict({})
-
-PROBLEM_ST_TYPE_ABBRVS = frozendict({
+PROBLEM_ST_TYPE_ABBRVS = {
     'CT': 'COURT'
-})
+}
 
-DIRECTIONAL_REPLACEMENTS = frozendict({
+DIRECTIONAL_REPLACEMENTS = {
     'EAST': 'E',
     'WEST': 'W',
     'NORTH': 'N',
@@ -28,9 +25,9 @@ DIRECTIONAL_REPLACEMENTS = frozendict({
     'NORTHWEST': 'NW',
     'SOUTHEAST': 'SE',
     'SOUTHWEST': 'SW'
-})
+}
 
-STREET_TYPE_ABBREVIATIONS = frozendict({
+STREET_TYPE_ABBREVIATIONS = {
     'ALLEE': 'ALY',
     'ALLEY': 'ALY',
     'ALLY': 'ALY',
@@ -558,9 +555,9 @@ STREET_TYPE_ABBREVIATIONS = frozendict({
     'WELL': 'WL',
     'WELLS': 'WLS',
     'WLS': 'WLS'
-})
+}
 
-OCCUPANCY_TYPE_ABBREVIATIONS = frozendict({
+OCCUPANCY_TYPE_ABBREVIATIONS = {
     'APARTMENT': 'APT',
     'BUILDING': 'BLDG',
     'BASEMENT': 'BSMT',
@@ -584,10 +581,11 @@ OCCUPANCY_TYPE_ABBREVIATIONS = frozendict({
     'SUITE': 'STE',
     'TRAILER': 'TRLR',
     'UNIT': 'UNIT',
-    'UPPER': 'UPPER'
-})
+    'UPPER': 'UPPER',
+    '#': '#'
+}
 
-STATE_ABBREVIATIONS = frozendict({
+STATE_ABBREVIATIONS = {
     'ALABAMA': 'AL',
     'ALA': 'AL',
     'ALASKA': 'AK',
@@ -682,7 +680,7 @@ STATE_ABBREVIATIONS = frozendict({
     'WISC': 'WI',
     'WYOMING': 'WY',
     'WYO': 'WY'
-})
+}
 
 ADDRESS_KEYS = (
     'address_line_1', 'address_line_2', 'city', 'state', 'postal_code'
@@ -732,7 +730,7 @@ def set_address_constants():
                     set(new_keys) - set(org_keys)
                 )
             if new_vals and insertion_method in update:
-                globals()[key] = globals()[key].copy(**new_vals)
+                globals()[key].update(**new_vals)
             elif new_vals and insertion_method in replace:
                 globals()[key] = new_vals
 
