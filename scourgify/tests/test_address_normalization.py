@@ -44,6 +44,7 @@ from scourgify.normalize import (
     normalize_state,
     normalize_street_types,
     parse_address_string,
+    NormalizeAddress
 )
 from scourgify.validations import (
     validate_address_components,
@@ -102,6 +103,14 @@ class TestAddressNormalization(TestCase):
             ('StateName', 'OR'),
             ('ZipCode', '97009')
         ])
+        self.hash_tag = '999 Nowhere Street # 12 Boring OR 97009'
+        self.hash_expected = dict(
+            address_line_1='999 NOWHERE ST',
+            address_line_2='# 12',
+            city='BORING',
+            state='OR',
+            postal_code='97009'
+        )
         self.unparesable_addr_str = '6000 SW 1000TH AVE  (BLDG  A5 RIGHT)'
 
     def test_normalize_address_record(self):
@@ -114,6 +123,23 @@ class TestAddressNormalization(TestCase):
 
         result = normalize_address_record(self.ordinal_addr)
         self.assertDictEqual(self.ordinal_expected, result)
+
+        result = normalize_address_record(self.hash_tag)
+        self.assertDictEqual(self.hash_expected, result)
+
+    def test_normalize_class(self):
+        """Test normalize_address_record function."""
+        result = NormalizeAddress(self.parseable_addr_str).normalize()
+        self.assertDictEqual(self.expected, result)
+
+        result = NormalizeAddress(self.address_dict).normalize()
+        self.assertDictEqual(self.expected, result)
+
+        result = NormalizeAddress(self.ordinal_addr).normalize()
+        self.assertDictEqual(self.ordinal_expected, result)
+
+        result = NormalizeAddress(self.hash_tag).normalize()
+        self.assertDictEqual(self.hash_expected, result)
 
     def test_normalize_addr_str(self):
         """Test normalize_addr_str function."""
