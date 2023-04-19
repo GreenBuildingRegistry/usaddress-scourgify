@@ -579,24 +579,44 @@ class TestAddressNormalizationUtils(TestCase):
         """Test validate_us_postal_code_format"""
 
         with self.assertRaises(AddressValidationError):
+            zip_five = 'AAAAA'
+            validate_us_postal_code_format(zip_five, self.address_dict)
+
+        with self.assertRaises(AddressValidationError):
+            zip_five = '97219-AAAA'
+            validate_us_postal_code_format(zip_five, self.address_dict)
+
+        with self.assertRaises(AddressValidationError):
+            zip_plus = '97219-000100'
+            validate_us_postal_code_format(zip_plus, self.address_dict)
+
+        with self.assertRaises(AddressValidationError):
             zip_plus = '97219-0001-00'
-            validate_us_postal_code_format(zip_plus, self.address_dict)
-
-        with self.assertRaises(AddressValidationError):
-            zip_plus = '97219-00'
-            validate_us_postal_code_format(zip_plus, self.address_dict)
-
-        with self.assertRaises(AddressValidationError):
-            zip_plus = '972-0001'
             validate_us_postal_code_format(zip_plus, self.address_dict)
 
         with self.assertRaises(AddressValidationError):
             zip_five = '9721900'
             validate_us_postal_code_format(zip_five, self.address_dict)
 
-        with self.assertRaises(AddressValidationError):
-            zip_five = '972'
-            validate_us_postal_code_format(zip_five, self.address_dict)
+        zip_five = '972'
+        expected = '00972'
+        result = validate_us_postal_code_format(zip_five, self.address_dict)
+        self.assertEqual(expected, result)
+
+        zip_plus = '97219-00'
+        expected = '97219-0000'
+        result = validate_us_postal_code_format(zip_plus, self.address_dict)
+        self.assertEqual(expected, result)
+
+        zip_plus = '972-0001'
+        expected = '00972-0001'
+        result = validate_us_postal_code_format(zip_plus, self.address_dict)
+        self.assertEqual(expected, result)
+
+        zip_plus = '972190001'
+        expected = '97219-0001'
+        result = validate_us_postal_code_format(zip_plus, self.address_dict)
+        self.assertEqual(expected, result)
 
         expected = '97219'
         result = validate_us_postal_code_format(expected, self.address_dict)

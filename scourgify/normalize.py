@@ -182,7 +182,7 @@ def normalize_addr_str(addr_str,         # type: str
     :type zipcode: str
     :param addtl_funcs: optional sequence of funcs that take string for further
         processing and return line1 and line2 strings
-    :type addtl_funcs: Sequence[Callable[str, (str, str)]]
+    :type addtl_funcs: Sequence[Callable[str, (str)]]
     :return: address dict with uppercase parsed and normalized address values.
     :rtype: Mapping[str, str]
     """
@@ -241,7 +241,7 @@ def normalize_addr_str(addr_str,         # type: str
         # line1 is set to addr_str so complete dict can be passed to error.
         line1 = addr_str
 
-    addr_rec = dict(
+    addr_rec = OrderedDict(
         address_line_1=line1, address_line_2=line2, city=city,
         state=state, postal_code=zipcode
     )
@@ -417,7 +417,11 @@ def get_parsed_values(parsed_addr, orig_val, val_label, orig_addr_str):
     val_from_parse = post_clean_addr_str(val_from_parse)
     non_null_val_set = {orig_val, val_from_parse} - {None}
     if len(non_null_val_set) > 1:
-        raise AmbiguousAddressError(None, None, orig_addr_str)
+        msg = (
+            f'Parsed {val_label} does not align with submitted value: '
+            f'Parsed: {val_from_parse}. Original: {orig_val}'
+        )
+        raise AmbiguousAddressError(None, msg, orig_addr_str)
     else:
         return non_null_val_set.pop() if non_null_val_set else None
 
@@ -698,28 +702,32 @@ class NormalizeAddress(object):
 
     def __init__(self, address, addr_map=None, addtl_funcs=None, strict=None):
         self.address = address
-        self.addr_map = addr_map
         self.addtl_funcs = addtl_funcs
         self.strict = True if strict is None else strict
+        if addr_map and not isinstance(self.address, str):
+            self.address = {
+                key: self.address.get(val) for key, val in addr_map.items()
+            }
+
+    @staticmethod
+    def get_normalized_line_1(parsed_addr, line_labels=LINE1_USADDRESS_LABELS):
+        return get_normalized_line_segment(parsed_addr, line_labels)
+
+    @staticmethod
+    def get_normalized_line_2(parsed_addr, line_labels=LINE2_USADDRESS_LABELS):
+        return get_normalized_line_segment(parsed_addr, line_labels)
 
     def normalize(self):
         if isinstance(self.address, str):
-            return self.normalize_addr_str(
-                self.address, addtl_funcs=self.addtl_funcs
-            )
+            return self.normalize_addr_str(self.address)
         else:
-            return self.normalize_addr_dict(
-                self.address, addr_map=self.addr_map,
-                addtl_funcs=self.addtl_funcs, strict=self.strict
-            )
+            return self.normalize_addr_dict()
 
     def normalize_addr_str(self, addr_str,  # type: str
                            line2=None,  # type: Optional[str]
                            city=None,  # type: Optional[str]
                            state=None,  # type: Optional[str]
                            zipcode=None,  # type: Optional[str]
-                           addtl_funcs=None
-                           # type: Sequence[Callable[[str,str], str]]  # noqa
                            ):  # noqa
         # get address parsed into usaddress components.
         error = None
@@ -774,20 +782,16 @@ class NormalizeAddress(object):
             # assumes if line2 is passed in that it need not be parsed from
             # addr_str. Primarily used to allow advanced processing of
             # otherwise unparsable addresses.
-            line2 = line2 if line2 else get_normalized_line_segment(
-                parsed_addr, LINE2_USADDRESS_LABELS
-            )
+            line2 = line2 if line2 else self.get_normalized_line_2(parsed_addr)
             line2 = self.post_clean_addr_str(line2)
             # line 1 is fully post cleaned in get_normalized_line_segment.
-            line1 = get_normalized_line_segment(
-                parsed_addr, LINE1_USADDRESS_LABELS
-            )
+            line1 = self.get_normalized_line_1(parsed_addr)
             validate_parens_groups_parsed(line1)
         else:
             # line1 is set to addr_str so complete dict can be passed to error.
             line1 = addr_str
 
-        addr_rec = dict(
+        addr_rec = OrderedDict(
             address_line_1=line1, address_line_2=line2, city=city,
             state=state, postal_code=zipcode
         )
@@ -796,12 +800,10 @@ class NormalizeAddress(object):
         else:
             return addr_rec
 
-    def normalize_addr_dict(self, addr_dict, addr_map=None, addtl_funcs=None,
-                            strict=True):
-        if addr_map:
-            addr_dict = {key: addr_dict.get(val) for key, val in
-                         addr_map.items()}
-        addr_dict = validate_address_components(addr_dict, strict=strict)
+    def normalize_addr_dict(self):
+        addr_dict = validate_address_components(
+            self.address, strict=self.strict
+        )
 
         # line 1 and line 2 elements are combined to ensure consistent
         # processing whether the line 2 elements are pre-parsed or
@@ -816,7 +818,7 @@ class NormalizeAddress(object):
         try:
             address = self.normalize_addr_str(
                 addr_str, city=city, state=state,
-                zipcode=zipcode, addtl_funcs=addtl_funcs
+                zipcode=zipcode
             )
         except AddressNormalizationError:
             addr_str = get_addr_line_str(
@@ -824,6 +826,6 @@ class NormalizeAddress(object):
             )
             address = self.normalize_addr_str(
                 addr_str, city=city, state=state,
-                zipcode=zipcode, addtl_funcs=addtl_funcs
+                zipcode=zipcode
             )
         return address
