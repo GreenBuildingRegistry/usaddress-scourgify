@@ -58,6 +58,9 @@ normalized_address_record() uses the included processing functions to remove una
 
 You may supply additional additional processing functions as a list of callable supplied to the addtl_funcs parameter. Any additional functions should take a string address and return a tuple of strings (line1, line2).
 
+Postal codes are normalized to US zip or zip+4 and zero padded as applicable.  ie: `2129 => 02129`, `02129-44 => 02129-0044`, `021290044 => 02129-0044`.
+However, postal codes that cannot be effectively normalized, such as invalid length or invalid characters, will raise AddressValidationError. ie `12345678901 or 02129- or 02129-0044-123, etc`
+
 Alternately, you may extend the `NormalizeAddress` class to customize the normalization behavior by overriding any of the class' methods.
 
 If your address is in the form of a dict that does not use the keys address_line_1, address_line_2, city, state, and postal_code, you must supply a key map to the addr_map parameter in the format {standard_key: custom_key}

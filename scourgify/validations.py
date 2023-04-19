@@ -97,14 +97,28 @@ def validate_us_postal_code_format(postal_code, address):
         'US Postal Codes must conform to five-digit Zip or Zip+4 standards.'
     )
     postal_code = post_clean_addr_str(postal_code)
-    if '-' in postal_code:
-        plus_four_code = postal_code.split('-')
-        if len(plus_four_code) != 2:
+    plus_four_code = postal_code.split('-')
+    for code in plus_four_code:
+        try:
+            int(code)
+        except ValueError:
             error = True
-        elif len(plus_four_code[0]) != 5 or len(plus_four_code[1]) != 4:
+    if not error:
+        if '-' in postal_code:
+            if len(postal_code.replace('-', '')) > 9:
+                error = True
+            elif len(plus_four_code) != 2:
+                error = True
+            else:
+                postal_code = '-'.join([
+                    plus_four_code[0].zfill(5), plus_four_code[1].zfill(4)
+                ])
+        elif len(postal_code) == 9:
+            postal_code = '-'.join([postal_code[:5], postal_code[5:]])
+        elif len(postal_code) > 5:
             error = True
-    elif len(postal_code) != 5:
-        error = True
+        else:
+            postal_code = postal_code.zfill(5)
 
     if error:
         raise AddressValidationError(msg, None, address)
