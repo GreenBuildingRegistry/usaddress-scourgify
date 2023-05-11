@@ -29,7 +29,10 @@ DIRECTIONAL_REPLACEMENTS = {
 
 CITY_ABBREVIATIONS = {v: k for k, v in DIRECTIONAL_REPLACEMENTS.items()}
 CITY_ABBRS = {
-    'ST': 'SAINT'
+    'ST': 'SAINT',
+    'MT': 'MOUNT',
+    'FT': 'FORT',
+    'VA': 'VIRGINIA'
 }
 CITY_ABBREVIATIONS.update(CITY_ABBRS)
 
