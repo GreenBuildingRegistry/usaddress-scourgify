@@ -37,6 +37,7 @@ import usaddress
 from scourgify.address_constants import (
     ABNORMAL_OCCUPANCY_ABBRVS,
     ADDRESS_KEYS,
+    CITY_ABBREVIATIONS,
     DIRECTIONAL_REPLACEMENTS,
     OCCUPANCY_TYPE_ABBREVIATIONS,
     STATE_ABBREVIATIONS,
@@ -580,6 +581,15 @@ def normalize_state(state):
     return state
 
 
+def normalize_city(city):
+    city = city.split()
+    for i, part in enumerate(city):
+        replacement = CITY_ABBREVIATIONS.get(part.replace('.', ''))
+        if replacement:
+            city[i] = replacement
+    return ' '.join(city)
+
+
 def get_normalized_line_segment(parsed_addr, line_labels):
     # type: (Mapping[str, str], Sequence[str]) -> str
     """
@@ -771,9 +781,7 @@ class NormalizeAddress(object):
             zipcode = self.get_parsed_values(
                 parsed_addr, zipcode, 'ZipCode', addr_str
             )
-            city = self.get_parsed_values(
-                parsed_addr, city, 'PlaceName', addr_str
-            )
+            city = self.normalize_city(parsed_addr, addr_str, city)
             state = self.get_parsed_values(
                 parsed_addr, state, 'StateName', addr_str
             )
@@ -829,3 +837,8 @@ class NormalizeAddress(object):
                 zipcode=zipcode
             )
         return address
+
+    def normalize_city(self, parsed_addr, addr_str, city=None):
+        return self.get_parsed_values(
+            parsed_addr, city, 'PlaceName', addr_str
+        )
