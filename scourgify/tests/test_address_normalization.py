@@ -113,6 +113,28 @@ class TestAddressNormalization(TestCase):
         )
         self.unparesable_addr_str = '6000 SW 1000TH AVE  (BLDG  A5 RIGHT)'
 
+        self.direction_expected = dict(
+            address_line_1='123 SW NOWHERE ST',
+            address_line_2='STE 0',
+            city='BORING',
+            state='OR',
+            postal_code='97009'
+        )
+        self.long_hand_expected = dict(
+            address_line_1='123 SOUTHWEST NOWHERE STREET',
+            address_line_2='STE 0',
+            city='BORING',
+            state='OR',
+            postal_code='97009'
+        )
+        self.abnormal_direction = dict(
+            address_line_1='123 South-West Nowhere St',
+            address_line_2='Suite 0',
+            city='Boring',
+            state='OR',
+            postal_code='97009'
+        )
+
     def test_normalize_address_record(self):
         """Test normalize_address_record function."""
         result = normalize_address_record(self.parseable_addr_str)
@@ -127,6 +149,14 @@ class TestAddressNormalization(TestCase):
         result = normalize_address_record(self.hash_tag)
         self.assertDictEqual(self.hash_expected, result)
 
+        result = normalize_address_record(self.abnormal_direction)
+        self.assertDictEqual(self.direction_expected, result)
+
+        result = normalize_address_record(
+            self.abnormal_direction, long_hand=True
+        )
+        self.assertDictEqual(self.long_hand_expected, result)
+
     def test_normalize_class(self):
         """Test normalize_address_record function."""
         result = NormalizeAddress(self.parseable_addr_str).normalize()
@@ -140,6 +170,14 @@ class TestAddressNormalization(TestCase):
 
         result = NormalizeAddress(self.hash_tag).normalize()
         self.assertDictEqual(self.hash_expected, result)
+
+        result = NormalizeAddress(self.abnormal_direction).normalize()
+        self.assertDictEqual(self.direction_expected, result)
+
+        result = NormalizeAddress(
+            self.abnormal_direction, long_hand=True
+        ).normalize()
+        self.assertDictEqual(self.long_hand_expected, result)
 
     def test_normalize_addr_str(self):
         """Test normalize_addr_str function."""
@@ -430,7 +468,7 @@ class TestAddressNormalizationUtils(TestCase):
         ])
         abbrev_directional = OrderedDict([
             ('AddressNumber', '123'),
-            ('SW', 'StreetNamePreDirectional'),
+            ('StreetNamePreDirectional', 'SW'),
             ('StreetNamePreType', 'COUNTY ROAD'),
             ('StreetName', '100')
         ])
@@ -449,6 +487,10 @@ class TestAddressNormalizationUtils(TestCase):
 
         result = normalize_directionals(no_directional)
         self.assertDictEqual(no_directional, result)
+
+        expected = 'SOUTHWEST'
+        result = normalize_directionals(abbrev_directional, long_hand=True)
+        self.assertEqual(expected, result['StreetNamePreDirectional'])
 
     def test_normalize_street_types(self):
         """Test normalize_street_types function."""
@@ -488,6 +530,10 @@ class TestAddressNormalizationUtils(TestCase):
 
         result = normalize_street_types(no_type)
         self.assertDictEqual(no_type, result)
+
+        expected = 'AVENUE'
+        result = normalize_street_types(abbrev_type, long_hand=True)
+        self.assertEqual(expected, result['StreetNamePostType'])
 
     def test_normalize_occupancy_type(self):
         """Test normalize_occupancy_type function."""
@@ -745,7 +791,7 @@ class TestAddressNormalizationUtils(TestCase):
         mock_config_get.side_effect = (
             'update', new_addr_keys,
             None, None, None, None, None,
-            new_problem_st
+            new_problem_st, None, None,
         )
         address_constants.set_address_constants()
         self.assertEqual(address_constants.ADDRESS_KEYS, new_addr_keys)
@@ -754,7 +800,7 @@ class TestAddressNormalizationUtils(TestCase):
         mock_config_get.side_effect = (
             'replace', new_addr_keys,
             None, None, None, None, None,
-            new_problem_st
+            new_problem_st, None, None,
         )
         address_constants.set_address_constants()
         self.assertEqual(address_constants.ADDRESS_KEYS, new_addr_keys)
@@ -765,7 +811,7 @@ class TestAddressNormalizationUtils(TestCase):
         mock_config_get.side_effect = (
             'invalid', new_addr_keys,
             None, None, None, None, None,
-            new_problem_st
+            new_problem_st, None, None,
         )
         self.assertRaises(
             ConfigError, address_constants.set_address_constants

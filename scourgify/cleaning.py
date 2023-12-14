@@ -21,6 +21,7 @@ from scourgify.address_constants import (
     KNOWN_ODDITIES,
     OCCUPANCY_TYPE_ABBREVIATIONS,
     PROBLEM_ST_TYPE_ABBRVS,
+    AMBIGUOUS_DIRECTIONALS
 )
 
 # Setup
@@ -77,6 +78,8 @@ def pre_clean_addr_str(addr_str, state=None):
     if '.' in addr_str:                                      # pragma: no cover
         addr_str = clean_period_char(addr_str)
 
+    addr_str = pre_clean_directionals(addr_str)
+
     # remove special characters per USPS pub 28, except & which impacts
     # intersection addresses, and - which impacts range addresses and zipcodes.
     # ',', '(' and ')' are also left for potential use in additional line 2
@@ -87,7 +90,7 @@ def pre_clean_addr_str(addr_str, state=None):
 
     # to prevent any potential confusion between CT = COURT v CT = Connecticut,
     # clean_ambiguous_street_types is not applied if state is CT.
-    if state and state != 'CT':
+    if state and state not in PROBLEM_ST_TYPE_ABBRVS.keys():
         addr_str = clean_ambiguous_street_types(addr_str)
 
     return addr_str
@@ -248,3 +251,18 @@ def clean_period_char(text):
     """
     period_pattern = re.compile(r'\.(?!\d)')
     return re.sub(period_pattern, '', text)
+
+
+def pre_clean_directionals(text):
+    """
+    Replaces any ambiguous directionals (ie south-west) with their
+    standard abbreviation (ie SW). This helps ensure the directionals are
+    correctly identified during the usaddress tagging, rather than being
+    identified as part of the street name.
+    Directionals misrepresented as two words (ie south west) are not cleaned
+    because directional named streets (ie West St) do exist with
+    pre-directionals (ie S West St).
+    """
+    for direction, abbr in AMBIGUOUS_DIRECTIONALS.items():
+        text = text.upper().replace(direction, abbr)
+    return text

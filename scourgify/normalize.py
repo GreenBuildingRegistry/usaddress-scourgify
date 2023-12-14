@@ -39,6 +39,8 @@ from scourgify.address_constants import (
     ADDRESS_KEYS,
     CITY_ABBREVIATIONS,
     DIRECTIONAL_REPLACEMENTS,
+    LONGHAND_DIRECTIONALS,
+    LONGHAND_STREET_TYPES,
     OCCUPANCY_TYPE_ABBREVIATIONS,
     STATE_ABBREVIATIONS,
     STREET_TYPE_ABBREVIATIONS,
@@ -119,7 +121,7 @@ STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 # Public Classes and Functions
 
 def normalize_address_record(address, addr_map=None, addtl_funcs=None,
-                             strict=True):
+                             strict=True, long_hand=False):
     # type: (Union[str, Mapping[str, str]]) -> Mapping[str, str]
     """Normalize an address according to USPS pub. 28 standards.
 
@@ -149,10 +151,13 @@ def normalize_address_record(address, addr_map=None, addtl_funcs=None,
     :rtype: Mapping[str, str]
     """
     if isinstance(address, str):
-        return normalize_addr_str(address, addtl_funcs=addtl_funcs)
+        return normalize_addr_str(
+            address, addtl_funcs=addtl_funcs, long_hand=long_hand
+        )
     else:
         return normalize_addr_dict(
-            address, addr_map=addr_map, addtl_funcs=addtl_funcs, strict=strict
+            address, addr_map=addr_map, addtl_funcs=addtl_funcs,
+            strict=strict, long_hand=long_hand
         )
 
 
@@ -161,7 +166,8 @@ def normalize_addr_str(addr_str,         # type: str
                        city=None,        # type: Optional[str]
                        state=None,       # type: Optional[str]
                        zipcode=None,     # type: Optional[str]
-                       addtl_funcs=None  # type: Sequence[Callable[[str,str], str]]  # noqa
+                       addtl_funcs=None,  # type: Sequence[Callable[[str,str], str]],  # noqa
+                       long_hand=False
                       ):                                        # noqa
     # type (...) -> Mapping[str, str]                                        # noqa
     # type (...) -> Mapping[str, str]
@@ -201,8 +207,10 @@ def normalize_addr_str(addr_str,         # type: str
                     line1, line2 = func(addr_str)
                     error = False
                     # send refactored line_1 and line_2 back through processing
-                    return normalize_addr_str(line1, line2=line2, city=city,
-                                              state=state, zipcode=zipcode)
+                    return normalize_addr_str(
+                        line1, line2=line2, city=city,
+                        state=state, zipcode=zipcode, long_hand=long_hand
+                    )
                 except ValueError:
                     # try a different additional processing function
                     pass
@@ -220,7 +228,9 @@ def normalize_addr_str(addr_str,         # type: str
             error = err
 
     if parsed_addr:
-        parsed_addr = normalize_address_components(parsed_addr)
+        parsed_addr = normalize_address_components(
+            parsed_addr, long_hand=long_hand
+        )
         zipcode = get_parsed_values(parsed_addr, zipcode, 'ZipCode', addr_str)
         city = get_parsed_values(parsed_addr, city, 'PlaceName', addr_str)
         state = get_parsed_values(parsed_addr, state, 'StateName', addr_str)
@@ -253,7 +263,7 @@ def normalize_addr_str(addr_str,         # type: str
 
 
 def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None,
-                        strict=True):
+                        strict=True, long_hand=False):
     # type: (Mapping[str, str]) -> Mapping[str, str]
     """Normalize an address from dict or dict-like object.
 
@@ -290,16 +300,16 @@ def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None,
     state = addr_dict.get('state')
     try:
         address = normalize_addr_str(
-            addr_str, city=city, state=state,
-            zipcode=zipcode, addtl_funcs=addtl_funcs
+            addr_str, city=city, state=state, zipcode=zipcode,
+            addtl_funcs=addtl_funcs, long_hand=long_hand
         )
     except AddressNormalizationError:
         addr_str = get_addr_line_str(
             addr_dict, comma_separate=True, addr_parts=ADDRESS_KEYS
         )
         address = normalize_addr_str(
-            addr_str, city=city, state=state,
-            zipcode=zipcode, addtl_funcs=addtl_funcs
+            addr_str, city=city, state=state, zipcode=zipcode,
+            addtl_funcs=addtl_funcs, long_hand=long_hand
         )
     return address
 
@@ -427,7 +437,7 @@ def get_parsed_values(parsed_addr, orig_val, val_label, orig_addr_str):
         return non_null_val_set.pop() if non_null_val_set else None
 
 
-def normalize_address_components(parsed_addr):
+def normalize_address_components(parsed_addr, long_hand=False):
     # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
     """Normalize parsed sections of address as appropriate.
 
@@ -439,8 +449,8 @@ def normalize_address_components(parsed_addr):
     :rtype: dict
     """
     parsed_addr = normalize_numbered_streets(parsed_addr)
-    parsed_addr = normalize_directionals(parsed_addr)
-    parsed_addr = normalize_street_types(parsed_addr)
+    parsed_addr = normalize_directionals(parsed_addr, long_hand=long_hand)
+    parsed_addr = normalize_street_types(parsed_addr, long_hand=long_hand)
     parsed_addr = normalize_occupancy_type(parsed_addr)
     return parsed_addr
 
@@ -469,7 +479,7 @@ def normalize_numbered_streets(parsed_addr):
     return parsed_addr
 
 
-def normalize_directionals(parsed_addr):
+def normalize_directionals(parsed_addr, long_hand=False):
     # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
     """Change directional notations to standard abbreviations.
 
@@ -482,6 +492,7 @@ def normalize_directionals(parsed_addr):
     found_directional_tags = (
         tag for tag in parsed_addr.keys() if 'Directional' in tag
     )
+    found_directional_tags = list(found_directional_tags)
     for found in found_directional_tags:
         # get the original directional related value per key.
         dir_str = parsed_addr[found]
@@ -491,11 +502,15 @@ def normalize_directionals(parsed_addr):
             dir_str, exclude=[], removal_cats=STRIP_ALL_CATS, strip_spaces=True
         )
         if dir_str in DIRECTIONAL_REPLACEMENTS.keys():
-            parsed_addr[found] = DIRECTIONAL_REPLACEMENTS[dir_str]
+            dir_str = DIRECTIONAL_REPLACEMENTS[dir_str]
+        if long_hand:
+            dir_str = LONGHAND_DIRECTIONALS[dir_str]
+        parsed_addr[found] = dir_str
+
     return parsed_addr
 
 
-def normalize_street_types(parsed_addr):
+def normalize_street_types(parsed_addr, long_hand=False):
     # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
     """Change street types to accepted abbreviated format.
 
@@ -512,11 +527,15 @@ def normalize_street_types(parsed_addr):
         tag for tag in parsed_addr.keys() if 'Street' in tag and 'Type' in tag
     )
     for found in found_type_tags:
+        street_type = parsed_addr[found]
         # lookup the appropriate abbrev for the street type found per key.
         type_abbr = STREET_TYPE_ABBREVIATIONS.get(parsed_addr[found])
         # update the street type only if a new abbreviation is found.
         if type_abbr:
-            parsed_addr[found] = type_abbr
+            street_type = type_abbr
+        if long_hand:
+            street_type = LONGHAND_STREET_TYPES[street_type]
+        parsed_addr[found] = street_type
     return parsed_addr
 
 
@@ -710,10 +729,12 @@ class NormalizeAddress(object):
     normalize_address_components = staticmethod(normalize_address_components)
     get_parsed_values = staticmethod(get_parsed_values)
 
-    def __init__(self, address, addr_map=None, addtl_funcs=None, strict=None):
+    def __init__(self, address, addr_map=None, addtl_funcs=None,
+                 strict=None, long_hand=False):
         self.address = address
         self.addtl_funcs = addtl_funcs
         self.strict = True if strict is None else strict
+        self.long_hand = long_hand
         if addr_map and not isinstance(self.address, str):
             self.address = {
                 key: self.address.get(val) for key, val in addr_map.items()
@@ -729,7 +750,9 @@ class NormalizeAddress(object):
 
     def normalize(self):
         if isinstance(self.address, str):
-            return self.normalize_addr_str(self.address)
+            return self.normalize_addr_str(
+                self.address, long_hand=self.long_hand
+            )
         else:
             return self.normalize_addr_dict()
 
@@ -738,6 +761,7 @@ class NormalizeAddress(object):
                            city=None,  # type: Optional[str]
                            state=None,  # type: Optional[str]
                            zipcode=None,  # type: Optional[str]
+                           long_hand=False
                            ):  # noqa
         # get address parsed into usaddress components.
         error = None
@@ -756,8 +780,8 @@ class NormalizeAddress(object):
                         # processing
                         return self.normalize_addr_str(
                             line1, line2=line2,
-                            city=city,
-                            state=state, zipcode=zipcode
+                            city=city, state=state, zipcode=zipcode,
+                            long_hand=long_hand
                         )
                     except ValueError:
                         # try a different additional processing function
@@ -777,7 +801,9 @@ class NormalizeAddress(object):
                 error = err
 
         if parsed_addr:
-            parsed_addr = self.normalize_address_components(parsed_addr)
+            parsed_addr = self.normalize_address_components(
+                parsed_addr, long_hand=long_hand
+            )
             zipcode = self.get_parsed_values(
                 parsed_addr, zipcode, 'ZipCode', addr_str
             )
@@ -826,7 +852,7 @@ class NormalizeAddress(object):
         try:
             address = self.normalize_addr_str(
                 addr_str, city=city, state=state,
-                zipcode=zipcode
+                zipcode=zipcode, long_hand=self.long_hand
             )
         except AddressNormalizationError:
             addr_str = get_addr_line_str(
@@ -834,7 +860,7 @@ class NormalizeAddress(object):
             )
             address = self.normalize_addr_str(
                 addr_str, city=city, state=state,
-                zipcode=zipcode
+                zipcode=zipcode, long_hand=self.long_hand
             )
         return address
 
