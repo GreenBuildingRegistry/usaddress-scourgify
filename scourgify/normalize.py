@@ -7,6 +7,8 @@ All rights reserved
 
 Provides functions to normalize address per USPS pub 28 and/or RESO standards.
 """
+from __future__ import annotations
+
 # TODO: Find why # with no street gets through
 # form_normalization = {
 #     'jurisdiction_property_id': 'TST123',
@@ -120,9 +122,10 @@ STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 
 # Public Classes and Functions
 
-def normalize_address_record(address, addr_map=None, addtl_funcs=None,
-                             strict=True, long_hand=False):
-    # type: (Union[str, Mapping[str, str]]) -> Mapping[str, str]
+def normalize_address_record(address: str | dict, addr_map: dict = None,
+                             addtl_funcs: [Callable] = None,
+                             strict: bool = True,
+                             long_hand: bool = False) -> dict:
     """Normalize an address according to USPS pub. 28 standards.
 
     Takes an address string, or a dict-like with standard address fields
@@ -147,6 +150,8 @@ def normalize_address_record(address, addr_map=None, addtl_funcs=None,
     :type addtl_funcs: Sequence[Callable[str, (str, str)]]
     :param strict: bool indicating strict handling of components address parts
         city, state and postal_code, vs city and state OR postal_code
+    :param long_hand: bool indicating whether to use long hand versions of
+        directionals and street types in the output.
     :return: address dict containing parsed and normalized address values.
     :rtype: Mapping[str, str]
     """
@@ -161,16 +166,10 @@ def normalize_address_record(address, addr_map=None, addtl_funcs=None,
         )
 
 
-def normalize_addr_str(addr_str,         # type: str
-                       line2=None,       # type: Optional[str]
-                       city=None,        # type: Optional[str]
-                       state=None,       # type: Optional[str]
-                       zipcode=None,     # type: Optional[str]
-                       addtl_funcs=None,  # type: Sequence[Callable[[str,str], str]],  # noqa
-                       long_hand=False
-                      ):                                        # noqa
-    # type (...) -> Mapping[str, str]                                        # noqa
-    # type (...) -> Mapping[str, str]
+def normalize_addr_str(addr_str: str, line2: str = None, city: str = None,
+                       state: str = None, zipcode: str = None,
+                       addtl_funcs: [Callable] = None,
+                       long_hand: bool = False) -> dict:
     """Normalize a complete or partial address string.
 
     :param addr_str: str containing address data.
@@ -190,6 +189,8 @@ def normalize_addr_str(addr_str,         # type: str
     :param addtl_funcs: optional sequence of funcs that take string for further
         processing and return line1 and line2 strings
     :type addtl_funcs: Sequence[Callable[str, (str)]]
+    :param long_hand: bool indicating whether to use long hand versions of
+        directionals and street types in the output.
     :return: address dict with uppercase parsed and normalized address values.
     :rtype: Mapping[str, str]
     """
@@ -231,9 +232,15 @@ def normalize_addr_str(addr_str,         # type: str
         parsed_addr = normalize_address_components(
             parsed_addr, long_hand=long_hand
         )
-        zipcode = get_parsed_values(parsed_addr, zipcode, 'ZipCode', addr_str)
-        city = get_parsed_values(parsed_addr, city, 'PlaceName', addr_str)
-        state = get_parsed_values(parsed_addr, state, 'StateName', addr_str)
+        zipcode = get_parsed_values(
+            parsed_addr, zipcode, 'ZipCode', addr_str
+        )
+        city = get_parsed_values(
+            parsed_addr, city, 'PlaceName', addr_str
+        )
+        state = get_parsed_values(
+            parsed_addr, state, 'StateName', addr_str
+        )
         state = normalize_state(state)
 
         # assumes if line2 is passed in that it need not be parsed from
@@ -262,9 +269,9 @@ def normalize_addr_str(addr_str,         # type: str
         return addr_rec
 
 
-def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None,
-                        strict=True, long_hand=False):
-    # type: (Mapping[str, str]) -> Mapping[str, str]
+def normalize_addr_dict(addr_dict: dict, addr_map: dict = None,
+                        addtl_funcs: [Callable] = None,
+                        strict: bool = True, long_hand: bool = False) -> dict:
     """Normalize an address from dict or dict-like object.
 
     Assumes addr_dict will have standard address related keys (address_line_1,
@@ -282,6 +289,8 @@ def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None,
     :type addtl_funcs: Sequence[Callable[str, (str, str)]]
     :param strict: bool indicating strict handling of components address parts
         city, state and postal_code, vs city and state OR postal_code
+    :param long_hand: bool indicating whether to use long hand versions of
+        directionals and street types in the output.
     :return: address dict with normalized, uppercase address values.
     :rtype: Mapping[str, str]
     """
@@ -314,8 +323,7 @@ def normalize_addr_dict(addr_dict, addr_map=None, addtl_funcs=None,
     return address
 
 
-def parse_address_string(addr_str):
-    # type: (str) -> MutableMapping[str, str]
+def parse_address_string(addr_str: str) -> dict:
     """Separate an address string into its component parts per usaddress.
 
     Attempts to parse addr_str into it's component parts, using usaddress.
@@ -341,7 +349,8 @@ def parse_address_string(addr_str):
     return parsed_addr
 
 
-def handle_abnormal_occupancy(parsed_addr, addr_str):
+def handle_abnormal_occupancy(parsed_addr: OrderedDict,
+                              addr_str: str) -> OrderedDict:
     """Handle abnormal occupancy abbreviations that are parsed as street type.
 
     Evaluates addresses with an Occupancy or Subaddress identifier whose type
@@ -397,8 +406,8 @@ def handle_abnormal_occupancy(parsed_addr, addr_str):
     return parsed_addr
 
 
-def get_parsed_values(parsed_addr, orig_val, val_label, orig_addr_str):
-    # type: (Mapping[str, str], str, str, str) -> Union[str, None]
+def get_parsed_values(parsed_addr: OrderedDict, orig_val: str,
+                      val_label: str, orig_addr_str: str) -> str | None:
     """Get valid values from parsed_addr corresponding to val_label.
 
     Retrieves values from parsed_addr corresponding to the label supplied in
@@ -437,16 +446,17 @@ def get_parsed_values(parsed_addr, orig_val, val_label, orig_addr_str):
         return non_null_val_set.pop() if non_null_val_set else None
 
 
-def normalize_address_components(parsed_addr, long_hand=False):
-    # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
+def normalize_address_components(parsed_addr: OrderedDict,
+                                 long_hand: bool = False) -> OrderedDict:
     """Normalize parsed sections of address as appropriate.
 
     Processes parsed address through subsets of normalization rules.
 
     :param parsed_addr: address parsed into ordereddict per usaddress.
-    :type parsed_addr:Mapping
+    :param long_hand: bool indicating whether to use long hand versions of
+        directional and street type in the output.
     :return: parsed_addr with normalization processing applied to elements.
-    :rtype: dict
+    :rtype: OrderedDict
     """
     parsed_addr = normalize_numbered_streets(parsed_addr)
     parsed_addr = normalize_directionals(parsed_addr, long_hand=long_hand)
@@ -455,8 +465,7 @@ def normalize_address_components(parsed_addr, long_hand=False):
     return parsed_addr
 
 
-def normalize_numbered_streets(parsed_addr):
-    # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
+def normalize_numbered_streets(parsed_addr: OrderedDict) -> OrderedDict:
     """Change numbered street names to include missing original identifiers.
 
     :param parsed_addr: address parsed into ordereddict per usaddress.
@@ -479,12 +488,14 @@ def normalize_numbered_streets(parsed_addr):
     return parsed_addr
 
 
-def normalize_directionals(parsed_addr, long_hand=False):
-    # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
+def normalize_directionals(parsed_addr: OrderedDict,
+                           long_hand=False) -> OrderedDict:
     """Change directional notations to standard abbreviations.
 
     :param parsed_addr: address parsed into ordereddict per usaddress.
     :type parsed_addr: Mapping
+    :param long_hand: bool indicating whether to use long hand versions of
+        directionals in the output.
     :return: parsed_addr with directionals updated to abbreviated format.
     :rtype: dict
     """
@@ -510,8 +521,8 @@ def normalize_directionals(parsed_addr, long_hand=False):
     return parsed_addr
 
 
-def normalize_street_types(parsed_addr, long_hand=False):
-    # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
+def normalize_street_types(parsed_addr: OrderedDict,
+                           long_hand=False) -> OrderedDict:
     """Change street types to accepted abbreviated format.
 
     No change is made if street types do not conform to common usages per
@@ -519,6 +530,8 @@ def normalize_street_types(parsed_addr, long_hand=False):
 
     :param parsed_addr: address parsed into ordereddict per usaddress.
     :type parsed_addr: Mapping
+    :param long_hand: bool indicating whether to use long hand versions of
+        street types in the output.
     :return: parsed_addr with street types updated to abbreviated format.
     :rtype: dict
     """
@@ -539,8 +552,8 @@ def normalize_street_types(parsed_addr, long_hand=False):
     return parsed_addr
 
 
-def normalize_occupancy_type(parsed_addr, default=None):
-    # type: (MutableMapping[str, str]) -> MutableMapping[str, str]
+def normalize_occupancy_type(parsed_addr: OrderedDict,
+                             default=None) -> OrderedDict:
     """Change occupancy types to accepted abbreviated format.
 
     If there is an occupancy and it does not conform to one of the
@@ -583,8 +596,7 @@ def normalize_occupancy_type(parsed_addr, default=None):
     return parsed_addr
 
 
-def normalize_state(state):
-    # type: (Union[str, None]) -> Union[str, None]
+def normalize_state(state: str | None) -> str | None:
     """Change state string to accepted abbreviated format.
 
     :param state: string containing state name or abbreviation.
@@ -600,7 +612,7 @@ def normalize_state(state):
     return state
 
 
-def normalize_city(city):
+def normalize_city(city: str):
     city = city.split()
     for i, part in enumerate(city):
         replacement = CITY_ABBREVIATIONS.get(part.replace('.', ''))
@@ -609,8 +621,8 @@ def normalize_city(city):
     return ' '.join(city)
 
 
-def get_normalized_line_segment(parsed_addr, line_labels):
-    # type: (Mapping[str, str], Sequence[str]) -> str
+def get_normalized_line_segment(parsed_addr: OrderedDict,
+                                line_labels: [str]) -> str:
     """
 
     :param parsed_addr: address parsed into ordereddict per usaddress.
@@ -625,8 +637,8 @@ def get_normalized_line_segment(parsed_addr, line_labels):
     return post_clean_addr_str(line_str)
 
 
-def get_addr_line_str(addr_dict, addr_parts=None, comma_separate=False):
-    # type: (Mapping[str, str], Optional[Sequence], bool) -> str
+def get_addr_line_str(addr_dict: dict, addr_parts: [str] = None,
+                      comma_separate: bool = False) -> str:
     """Get address 'line' elements as a single string.
 
     Combines 'address_line_1' and 'address_line_2' elements as a single string
@@ -654,7 +666,7 @@ def get_addr_line_str(addr_dict, addr_parts=None, comma_separate=False):
     return addr_str
 
 
-def format_address_record(address):
+def format_address_record(address: dict) -> str:
     # type AddressRecord -> str
     """Format AddressRecord as string."""
     address_template = Template('$address')
@@ -665,8 +677,8 @@ def format_address_record(address):
     return address_template.safe_substitute(address=', '.join(addr_parts))
 
 
-def get_geocoder_normalized_addr(address, addr_keys=ADDRESS_KEYS):
-    # type: (Union[Mapping, str], Optional[Sequence]) -> dict
+def get_geocoder_normalized_addr(address: dict | str,
+                                 addr_keys: [str] = ADDRESS_KEYS) -> dict:
     """Get geocoder normalized address parsed to dict with addr_keys.
 
     :param address: string or dict-like containing address data
@@ -695,8 +707,7 @@ def get_geocoder_normalized_addr(address, addr_keys=ADDRESS_KEYS):
     return geo_addr_dict
 
 
-def get_ordinal_indicator(number):
-    # type: (int) -> str
+def get_ordinal_indicator(number: int) -> str:
     """Get the ordinal indicator suffix applicable to the supplied number.
 
      Ordinal numbers are words representing position or rank in a sequential
@@ -722,6 +733,32 @@ def get_ordinal_indicator(number):
 
 
 class NormalizeAddress(object):
+    """Normalize an address according to USPS pub. 28 standards.
+
+    Instantiates with an address string, or a dict-like with standard address
+    fields (address_line_1, address_line_2, city, state, postal_code), removes
+    unacceptable special characters, extra spaces, predictable abnormal
+    character sub-strings and phrases, abbreviates directional indicators
+    and street types.  If applicable, line 2 address elements (ie: Apt, Unit)
+    are separated from line 1 inputs.
+
+    addr_map, if used, must be in the format {standard_key: custom_key} based
+    on standard address keys sighted above.
+
+    Returns an address dict with all field values in uppercase format.
+
+    :param address: str or dict-like object containing details of a single
+        address.
+    :param addr_map: mapping of standard address fields to custom key names
+    :param addtl_funcs: optional sequence of funcs that take string for further
+        processing and return line1 and line2 strings
+    :type addtl_funcs: Sequence[Callable[str, (str, str)]]
+    :param strict: bool indicating strict handling of components address parts
+        city, state and postal_code, vs city and state OR postal_code
+    :param long_hand: bool indicating whether to use long hand versions of
+        directionals and street types in the output.
+    :return: address dict containing parsed and normalized address values.
+    """
     parse_address_string = staticmethod(parse_address_string)
     pre_clean_addr_str = staticmethod(pre_clean_addr_str)
     post_clean_addr_str = staticmethod(post_clean_addr_str)
