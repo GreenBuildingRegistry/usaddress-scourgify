@@ -54,6 +54,40 @@ expected output
             'postal_code': '97203'
         }
 
+
+By default, the output style abbreviates all pre or post directionals, street types, and occupancy types.
+Alternately, if you would like to receive your output with full word directionals and street types, you can use the `long_hand` parameter.
+
+.. code-block:: python
+
+
+        from scourgify import normalize_address_record, NormalizeAddress
+
+        normalize_address_record('123 southwest Main street, Boring, or, 97203', long_hand=True)
+
+        normalize_address_record({
+            'address_line_1': '123 southwest Main street',
+            'address_line_2': 'unit 2,
+            'city': 'Boring',
+            'state': 'or',
+            'postal_code': '97203'
+        })
+
+        NormalizeAddress('123 southwest Main street, Boring, or, 97203', long_hand=True).normalize()
+
+expected output
+
+
+.. code-block:: python
+
+       {
+            'address_line_1': '123 SOUTHWEST MAIN STREET',
+            'address_line_2': 'UNIT 2'
+            'city': 'BORING',
+            'state': 'OR',
+            'postal_code': '97203'
+        }
+
 normalized_address_record() uses the included processing functions to remove unacceptable special characters, extra spaces, predictable abnormal character sub-strings and phrases. It also abbreviates directional indicators and street types according to the abbreviation mappings found in address_constants.  If applicable, line 2 address elements (ie: Apt, Unit) are separated from line 1 inputs and standard occupancy type abbreviations are applied.
 
 You may supply additional additional processing functions as a list of callable supplied to the addtl_funcs parameter. Any additional functions should take a string address and return a tuple of strings (line1, line2).
