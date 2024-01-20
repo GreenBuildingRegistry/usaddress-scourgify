@@ -30,7 +30,7 @@ Both functions, and the class init, take an address string, or a dict-like objec
         from scourgify import normalize_address_record, NormalizeAddress
 
         normalize_address_record('123 southwest Main street, Boring, or, 97203')
-        
+
         normalize_address_record({
             'address_line_1': '123 southwest Main street',
             'address_line_2': 'unit 2',
@@ -154,6 +154,12 @@ To use get_geocoder_normalized_addr, set the GOOGLE_API_KEY environment variable
 Contributing
 ------------
 Create a new branch to hold your change; no pull requests submitted directly to dev or master will be approved.  Please include a comment explain the issue your pull request solves. Make sure all appropriate test, and tox, updates are included and that all tests are passing.
+
+To setup a local environment and run tests:
+
+```bash
+tox
+```
 
 License
 -------
