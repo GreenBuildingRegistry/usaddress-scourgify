@@ -21,7 +21,7 @@ from scourgify.address_constants import (
     KNOWN_ODDITIES,
     OCCUPANCY_TYPE_ABBREVIATIONS,
     PROBLEM_ST_TYPE_ABBRVS,
-    AMBIGUOUS_DIRECTIONALS
+    AMBIGUOUS_DIRECTIONALS,
 )
 
 # Setup
@@ -35,10 +35,8 @@ ALLOWED_CHARS = [35, 38, 45, 46, 47]
 PRECLEAN_EXCLUDE = [40, 41, 44]
 EXCLUDE_ALL = ALLOWED_CHARS + PRECLEAN_EXCLUDE
 
-STRIP_CHAR_CATS = (
-    'M', 'S', 'C', 'Nl', 'No', 'Pc', 'Ps', 'Pe', 'Pi', 'Pf', 'Po'
-)
-STRIP_PUNC_CATS = ('Z', 'Pd')
+STRIP_CHAR_CATS = ("M", "S", "C", "Nl", "No", "Pc", "Ps", "Pe", "Pi", "Pf", "Po")
+STRIP_PUNC_CATS = ("Z", "Pd")
 STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 
 # Data Structure Definitions
@@ -47,6 +45,7 @@ STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 
 
 # Public Classes and Functions
+
 
 def pre_clean_addr_str(addr_str, state=None):
     # type: (str, Optional[str]) -> str
@@ -71,11 +70,11 @@ def pre_clean_addr_str(addr_str, state=None):
     """
     # replace any easily handled, undesirable sub-strings
     if any(oddity in addr_str for oddity in KNOWN_ODDITIES.keys()):
-        for key, replacement in KNOWN_ODDITIES.items():      # pragma: no cover
+        for key, replacement in KNOWN_ODDITIES.items():  # pragma: no cover
             addr_str = addr_str.replace(key, replacement)
 
     # remove non-decimal point period chars.
-    if '.' in addr_str:                                      # pragma: no cover
+    if "." in addr_str:  # pragma: no cover
         addr_str = clean_period_char(addr_str)
 
     addr_str = pre_clean_directionals(addr_str)
@@ -84,9 +83,7 @@ def pre_clean_addr_str(addr_str, state=None):
     # intersection addresses, and - which impacts range addresses and zipcodes.
     # ',', '(' and ')' are also left for potential use in additional line 2
     # processing functions
-    addr_str = clean_upper(
-        addr_str, exclude=EXCLUDE_ALL, removal_cats=STRIP_CHAR_CATS
-    )
+    addr_str = clean_upper(addr_str, exclude=EXCLUDE_ALL, removal_cats=STRIP_CHAR_CATS)
 
     # to prevent any potential confusion between CT = COURT v CT = Connecticut,
     # clean_ambiguous_street_types is not applied if state is CT.
@@ -115,7 +112,7 @@ def clean_ambiguous_street_types(addr_str):
         for key in PROBLEM_ST_TYPE_ABBRVS:
             if key in split_addr:
                 split_addr[split_addr.index(key)] = PROBLEM_ST_TYPE_ABBRVS[key]
-                addr_str = ' '.join(split_addr)
+                addr_str = " ".join(split_addr)
                 break
     return addr_str
 
@@ -148,7 +145,7 @@ def _parse_occupancy(addr_line_2):
         except usaddress.RepeatedLabelError:
             pass
         if parsed:
-            occupancy = parsed[0].get('OccupancyIdentifier')
+            occupancy = parsed[0].get("OccupancyIdentifier")
     return occupancy
 
 
@@ -163,7 +160,7 @@ def strip_occupancy_type(addr_line_2):
     """
     occupancy = None
     if addr_line_2:
-        addr_line_2 = addr_line_2.replace('#', '').strip().upper()
+        addr_line_2 = addr_line_2.replace("#", "").strip().upper()
         occupancy = _parse_occupancy(addr_line_2)
 
         # if that doesn't work, clean abbrevs and try again
@@ -179,23 +176,23 @@ def strip_occupancy_type(addr_line_2):
             # if that doesn't work, dissect it manually
             if not occupancy:
                 occupancy = addr_line_2
-                types = (
-                    list(OCCUPANCY_TYPE_ABBREVIATIONS.keys())
-                    + list(OCCUPANCY_TYPE_ABBREVIATIONS.values())
+                types = list(OCCUPANCY_TYPE_ABBREVIATIONS.keys()) + list(
+                    OCCUPANCY_TYPE_ABBREVIATIONS.values()
                 )
                 if parts and len(parts) > 1:
                     ids = [p for p in parts if p not in types]
                     print(ids)
-                    occupancy = ' '.join(ids)
+                    occupancy = " ".join(ids)
 
     return occupancy
 
 
-def clean_upper(text,                           # type: Any
-                exclude=None,                   # type: Optional[Sequence[int]]
-                removal_cats=STRIP_CHAR_CATS,   # type: Optional[Sequence[str]]
-                strip_spaces=False              # type: Optional[bool]
-                ):
+def clean_upper(
+    text,  # type: Any
+    exclude=None,  # type: Optional[Sequence[int]]
+    removal_cats=STRIP_CHAR_CATS,  # type: Optional[Sequence[str]]
+    strip_spaces=False,  # type: Optional[bool]
+):
     # type: (str, Optional[Sequence[int]], Optional[Sequence[str]]) -> str
     """
     Return text as upper case unicode string and remove unwanted characters.
@@ -218,8 +215,8 @@ def clean_upper(text,                           # type: Any
     if not isinstance(text, str):  # pragma: no cover
         text = str(text)
     # catch and convert fractions
-    text = unicodedata.normalize('NFKD', text)
-    text = text.translate({8260: '/'})
+    text = unicodedata.normalize("NFKD", text)
+    text = text.translate({8260: "/"})
 
     # evaluate string without commas (,) or ampersand (&) to determine if
     # further processing is necessary
@@ -227,16 +224,18 @@ def clean_upper(text,                           # type: Any
 
     # remove unwanted non-alphanumeric characters and convert all dash type
     # characters to hyphen
-    if not alnum_text.replace(' ', '').isalnum():
+    if not alnum_text.replace(" ", "").isalnum():
         for char in text:
-            if (unicodedata.category(char).startswith(removal_cats)
-                    and ord(char) not in exclude):
+            if (
+                unicodedata.category(char).startswith(removal_cats)
+                and ord(char) not in exclude
+            ):
                 text = text.translate({ord(char): None})
-            elif unicodedata.category(char).startswith('Pd'):
-                text = text.translate({ord(char): '-'})
-    join_char = ' '
+            elif unicodedata.category(char).startswith("Pd"):
+                text = text.translate({ord(char): "-"})
+    join_char = " "
     if strip_spaces:
-        join_char = ''
+        join_char = ""
     # remove extra spaces and convert to uppercase
     return join_char.join(text.split()).upper()
 
@@ -249,8 +248,8 @@ def clean_period_char(text):
     :return: cleaned string
     :rtype: str
     """
-    period_pattern = re.compile(r'\.(?!\d)')
-    return re.sub(period_pattern, '', text)
+    period_pattern = re.compile(r"\.(?!\d)")
+    return re.sub(period_pattern, "", text)
 
 
 def pre_clean_directionals(text):

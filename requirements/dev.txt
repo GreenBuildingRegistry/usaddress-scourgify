@@ -7,4 +7,4 @@ pep8>=1.7.0
 pylama>=7.3.3
 pylint>=1.6.4
 tox>=2.7.0
-
+black>=23.12.1

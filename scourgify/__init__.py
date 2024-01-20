@@ -9,5 +9,5 @@ All rights reserved
 from scourgify.normalize import (
     get_geocoder_normalized_addr,
     normalize_address_record,
-    NormalizeAddress
+    NormalizeAddress,
 )

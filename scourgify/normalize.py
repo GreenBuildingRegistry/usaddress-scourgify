@@ -69,52 +69,50 @@ from scourgify.validations import (
 # Constants
 
 LINE1_USADDRESS_LABELS = (
-    'AddressNumber',
-    'StreetName',
-    'AddressNumberPrefix',
-    'AddressNumberSuffix',
-    'StreetNamePreDirectional',
-    'StreetNamePostDirectional',
-    'StreetNamePreModifier',
-    'StreetNamePostType',
-    'StreetNamePreType',
-    'IntersectionSeparator',
-    'SecondStreetNamePreDirectional',
-    'SecondStreetNamePostDirectional',
-    'SecondStreetNamePreModifier',
-    'SecondStreetNamePostType',
-    'SecondStreetNamePreType',
-    'LandmarkName',
-    'CornerOf',
-    'IntersectionSeparator',
-    'BuildingName',
+    "AddressNumber",
+    "StreetName",
+    "AddressNumberPrefix",
+    "AddressNumberSuffix",
+    "StreetNamePreDirectional",
+    "StreetNamePostDirectional",
+    "StreetNamePreModifier",
+    "StreetNamePostType",
+    "StreetNamePreType",
+    "IntersectionSeparator",
+    "SecondStreetNamePreDirectional",
+    "SecondStreetNamePostDirectional",
+    "SecondStreetNamePreModifier",
+    "SecondStreetNamePostType",
+    "SecondStreetNamePreType",
+    "LandmarkName",
+    "CornerOf",
+    "IntersectionSeparator",
+    "BuildingName",
 )
 LINE2_USADDRESS_LABELS = (
-    'OccupancyType',
-    'OccupancyIdentifier',
-    'SubaddressIdentifier',
-    'SubaddressType',
+    "OccupancyType",
+    "OccupancyIdentifier",
+    "SubaddressIdentifier",
+    "SubaddressType",
 )
 
 LAST_LINE_LABELS = (
-    'PlaceName',
-    'StateName',
-    'ZipCode',
+    "PlaceName",
+    "StateName",
+    "ZipCode",
 )
 
 AMBIGUOUS_LABELS = (
-    'Recipient',
-    'USPSBoxType',
-    'USPSBoxID',
-    'USPSBoxGroupType',
-    'USPSBoxGroupID',
-    'NotAddress'
+    "Recipient",
+    "USPSBoxType",
+    "USPSBoxID",
+    "USPSBoxGroupType",
+    "USPSBoxGroupID",
+    "NotAddress",
 )
 
-STRIP_CHAR_CATS = (
-    'M', 'S', 'C', 'Nl', 'No', 'Pc', 'Ps', 'Pe', 'Pi', 'Pf', 'Po'
-)
-STRIP_PUNC_CATS = ('Z', 'Pd')
+STRIP_CHAR_CATS = ("M", "S", "C", "Nl", "No", "Pc", "Ps", "Pe", "Pi", "Pf", "Po")
+STRIP_PUNC_CATS = ("Z", "Pd")
 STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 
 
@@ -122,10 +120,14 @@ STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 
 # Public Classes and Functions
 
-def normalize_address_record(address: str | dict, addr_map: dict = None,
-                             addtl_funcs: [Callable] = None,
-                             strict: bool = True,
-                             long_hand: bool = False) -> dict:
+
+def normalize_address_record(
+    address: str | dict,
+    addr_map: dict = None,
+    addtl_funcs: [Callable] = None,
+    strict: bool = True,
+    long_hand: bool = False,
+) -> dict:
     """Normalize an address according to USPS pub. 28 standards.
 
     Takes an address string, or a dict-like with standard address fields
@@ -156,20 +158,26 @@ def normalize_address_record(address: str | dict, addr_map: dict = None,
     :rtype: Mapping[str, str]
     """
     if isinstance(address, str):
-        return normalize_addr_str(
-            address, addtl_funcs=addtl_funcs, long_hand=long_hand
-        )
+        return normalize_addr_str(address, addtl_funcs=addtl_funcs, long_hand=long_hand)
     else:
         return normalize_addr_dict(
-            address, addr_map=addr_map, addtl_funcs=addtl_funcs,
-            strict=strict, long_hand=long_hand
+            address,
+            addr_map=addr_map,
+            addtl_funcs=addtl_funcs,
+            strict=strict,
+            long_hand=long_hand,
         )
 
 
-def normalize_addr_str(addr_str: str, line2: str = None, city: str = None,
-                       state: str = None, zipcode: str = None,
-                       addtl_funcs: [Callable] = None,
-                       long_hand: bool = False) -> dict:
+def normalize_addr_str(
+    addr_str: str,
+    line2: str = None,
+    city: str = None,
+    state: str = None,
+    zipcode: str = None,
+    addtl_funcs: [Callable] = None,
+    long_hand: bool = False,
+) -> dict:
     """Normalize a complete or partial address string.
 
     :param addr_str: str containing address data.
@@ -209,17 +217,24 @@ def normalize_addr_str(addr_str: str, line2: str = None, city: str = None,
                     error = False
                     # send refactored line_1 and line_2 back through processing
                     return normalize_addr_str(
-                        line1, line2=line2, city=city,
-                        state=state, zipcode=zipcode, long_hand=long_hand
+                        line1,
+                        line2=line2,
+                        city=city,
+                        state=state,
+                        zipcode=zipcode,
+                        long_hand=long_hand,
                     )
                 except ValueError:
                     # try a different additional processing function
                     pass
 
-    if parsed_addr and not parsed_addr.get('StreetName'):
+    if parsed_addr and not parsed_addr.get("StreetName"):
         addr_dict = dict(
-            address_line_1=addr_str, address_line_2=line2, city=city,
-            state=state, postal_code=zipcode
+            address_line_1=addr_str,
+            address_line_2=line2,
+            city=city,
+            state=state,
+            postal_code=zipcode,
         )
         full_addr = format_address_record(addr_dict)
         try:
@@ -229,39 +244,34 @@ def normalize_addr_str(addr_str: str, line2: str = None, city: str = None,
             error = err
 
     if parsed_addr:
-        parsed_addr = normalize_address_components(
-            parsed_addr, long_hand=long_hand
-        )
-        zipcode = get_parsed_values(
-            parsed_addr, zipcode, 'ZipCode', addr_str
-        )
-        city = get_parsed_values(
-            parsed_addr, city, 'PlaceName', addr_str
-        )
-        state = get_parsed_values(
-            parsed_addr, state, 'StateName', addr_str
-        )
+        parsed_addr = normalize_address_components(parsed_addr, long_hand=long_hand)
+        zipcode = get_parsed_values(parsed_addr, zipcode, "ZipCode", addr_str)
+        city = get_parsed_values(parsed_addr, city, "PlaceName", addr_str)
+        state = get_parsed_values(parsed_addr, state, "StateName", addr_str)
         state = normalize_state(state)
 
         # assumes if line2 is passed in that it need not be parsed from
         # addr_str. Primarily used to allow advanced processing of otherwise
         # unparsable addresses.
-        line2 = line2 if line2 else get_normalized_line_segment(
-            parsed_addr, LINE2_USADDRESS_LABELS
+        line2 = (
+            line2
+            if line2
+            else get_normalized_line_segment(parsed_addr, LINE2_USADDRESS_LABELS)
         )
         line2 = post_clean_addr_str(line2)
         # line 1 is fully post cleaned in get_normalized_line_segment.
-        line1 = get_normalized_line_segment(
-            parsed_addr, LINE1_USADDRESS_LABELS
-        )
+        line1 = get_normalized_line_segment(parsed_addr, LINE1_USADDRESS_LABELS)
         validate_parens_groups_parsed(line1)
     else:
         # line1 is set to addr_str so complete dict can be passed to error.
         line1 = addr_str
 
     addr_rec = OrderedDict(
-        address_line_1=line1, address_line_2=line2, city=city,
-        state=state, postal_code=zipcode
+        address_line_1=line1,
+        address_line_2=line2,
+        city=city,
+        state=state,
+        postal_code=zipcode,
     )
     if error:
         raise UnParseableAddressError(None, None, addr_rec)
@@ -269,9 +279,13 @@ def normalize_addr_str(addr_str: str, line2: str = None, city: str = None,
         return addr_rec
 
 
-def normalize_addr_dict(addr_dict: dict, addr_map: dict = None,
-                        addtl_funcs: [Callable] = None,
-                        strict: bool = True, long_hand: bool = False) -> dict:
+def normalize_addr_dict(
+    addr_dict: dict,
+    addr_map: dict = None,
+    addtl_funcs: [Callable] = None,
+    strict: bool = True,
+    long_hand: bool = False,
+) -> dict:
     """Normalize an address from dict or dict-like object.
 
     Assumes addr_dict will have standard address related keys (address_line_1,
@@ -301,24 +315,32 @@ def normalize_addr_dict(addr_dict: dict, addr_map: dict = None,
     # line 1 and line 2 elements are combined to ensure consistent processing
     # whether the line 2 elements are pre-parsed or included in line 1
     addr_str = get_addr_line_str(addr_dict, comma_separate=True)
-    postal_code = addr_dict.get('postal_code')
-    zipcode = validate_us_postal_code_format(
-        postal_code, addr_dict
-    ) if postal_code else None
-    city = addr_dict.get('city')
-    state = addr_dict.get('state')
+    postal_code = addr_dict.get("postal_code")
+    zipcode = (
+        validate_us_postal_code_format(postal_code, addr_dict) if postal_code else None
+    )
+    city = addr_dict.get("city")
+    state = addr_dict.get("state")
     try:
         address = normalize_addr_str(
-            addr_str, city=city, state=state, zipcode=zipcode,
-            addtl_funcs=addtl_funcs, long_hand=long_hand
+            addr_str,
+            city=city,
+            state=state,
+            zipcode=zipcode,
+            addtl_funcs=addtl_funcs,
+            long_hand=long_hand,
         )
     except AddressNormalizationError:
         addr_str = get_addr_line_str(
             addr_dict, comma_separate=True, addr_parts=ADDRESS_KEYS
         )
         address = normalize_addr_str(
-            addr_str, city=city, state=state, zipcode=zipcode,
-            addtl_funcs=addtl_funcs, long_hand=long_hand
+            addr_str,
+            city=city,
+            state=state,
+            zipcode=zipcode,
+            addtl_funcs=addtl_funcs,
+            long_hand=long_hand,
         )
     return address
 
@@ -342,15 +364,15 @@ def parse_address_string(addr_str: str) -> dict:
     parsed_addr = parsed_results[0]
     # if the address is parseable but some form of ambiguity is found that
     # may result in data corruption NormalizationError is raised.
-    if (parsed_results[1] == 'Ambiguous' or
-            any(key in AMBIGUOUS_LABELS for key in parsed_addr.keys())):
+    if parsed_results[1] == "Ambiguous" or any(
+        key in AMBIGUOUS_LABELS for key in parsed_addr.keys()
+    ):
         raise AmbiguousAddressError()
     parsed_addr = handle_abnormal_occupancy(parsed_addr, addr_str)
     return parsed_addr
 
 
-def handle_abnormal_occupancy(parsed_addr: OrderedDict,
-                              addr_str: str) -> OrderedDict:
+def handle_abnormal_occupancy(parsed_addr: OrderedDict, addr_str: str) -> OrderedDict:
     """Handle abnormal occupancy abbreviations that are parsed as street type.
 
     Evaluates addresses with an Occupancy or Subaddress identifier whose type
@@ -372,10 +394,10 @@ def handle_abnormal_occupancy(parsed_addr: OrderedDict,
     :rtype: OrderedDict
     """
     occupancy_id_key = None
-    occupany_type_key = 'OccupancyType'
-    street_type_key = 'StreetNamePostType'
-    occupany_type_keys = (occupany_type_key, 'SubaddressType')
-    occupancy_identifier_keys = ('OccupancyIdentifier', 'SubaddressIdentifier')
+    occupany_type_key = "OccupancyType"
+    street_type_key = "StreetNamePostType"
+    occupany_type_keys = (occupany_type_key, "SubaddressType")
+    occupancy_identifier_keys = ("OccupancyIdentifier", "SubaddressIdentifier")
     street_type = parsed_addr.get(street_type_key)
     if street_type in ABNORMAL_OCCUPANCY_ABBRVS:
         occupancy_type = None
@@ -395,19 +417,20 @@ def handle_abnormal_occupancy(parsed_addr: OrderedDict,
                 break
         if occupancy and not occupancy_type:
             if street_type in occupancy:
-                occupancy = occupancy.replace(street_type, '').strip()
+                occupancy = occupancy.replace(street_type, "").strip()
                 del parsed_addr[occupancy_id_key]
             else:
                 line2 = "{} {}".format(street_type, occupancy)
-                addr_str = addr_str.replace(line2, '')
+                addr_str = addr_str.replace(line2, "")
                 parsed_addr = parse_address_string(addr_str)
             parsed_addr.update({occupany_type_key: street_type})
             parsed_addr.update({occupancy_id_key: occupancy})
     return parsed_addr
 
 
-def get_parsed_values(parsed_addr: OrderedDict, orig_val: str,
-                      val_label: str, orig_addr_str: str) -> str | None:
+def get_parsed_values(
+    parsed_addr: OrderedDict, orig_val: str, val_label: str, orig_addr_str: str
+) -> str | None:
     """Get valid values from parsed_addr corresponding to val_label.
 
     Retrieves values from parsed_addr corresponding to the label supplied in
@@ -438,16 +461,17 @@ def get_parsed_values(parsed_addr: OrderedDict, orig_val: str,
     non_null_val_set = {orig_val, val_from_parse} - {None}
     if len(non_null_val_set) > 1:
         msg = (
-            f'Parsed {val_label} does not align with submitted value: '
-            f'Parsed: {val_from_parse}. Original: {orig_val}'
+            f"Parsed {val_label} does not align with submitted value: "
+            f"Parsed: {val_from_parse}. Original: {orig_val}"
         )
         raise AmbiguousAddressError(None, msg, orig_addr_str)
     else:
         return non_null_val_set.pop() if non_null_val_set else None
 
 
-def normalize_address_components(parsed_addr: OrderedDict,
-                                 long_hand: bool = False) -> OrderedDict:
+def normalize_address_components(
+    parsed_addr: OrderedDict, long_hand: bool = False
+) -> OrderedDict:
     """Normalize parsed sections of address as appropriate.
 
     Processes parsed address through subsets of normalization rules.
@@ -472,9 +496,9 @@ def normalize_numbered_streets(parsed_addr: OrderedDict) -> OrderedDict:
     :type parsed_addr: Mapping
     :return: parsed_addr with ordinal identifiers appended to numbered streets.
     :rtype: dict"""
-    street_tags = ['StreetName', 'SecondStreetName']
+    street_tags = ["StreetName", "SecondStreetName"]
     for tag in street_tags:
-        post_type_tag = '{}PostType'.format(tag)
+        post_type_tag = "{}PostType".format(tag)
         # limits updates to numbered street names that include a post street
         # type, since an ordinal indicator would be inappropriate for some
         # numbered streets (ie. Country Road 97).
@@ -482,14 +506,13 @@ def normalize_numbered_streets(parsed_addr: OrderedDict) -> OrderedDict:
             try:
                 cardinal = int(parsed_addr[tag])
                 ord_indicator = get_ordinal_indicator(cardinal)
-                parsed_addr[tag] = '{}{}'.format(cardinal, ord_indicator)
+                parsed_addr[tag] = "{}{}".format(cardinal, ord_indicator)
             except ValueError:
                 pass
     return parsed_addr
 
 
-def normalize_directionals(parsed_addr: OrderedDict,
-                           long_hand=False) -> OrderedDict:
+def normalize_directionals(parsed_addr: OrderedDict, long_hand=False) -> OrderedDict:
     """Change directional notations to standard abbreviations.
 
     :param parsed_addr: address parsed into ordereddict per usaddress.
@@ -500,9 +523,7 @@ def normalize_directionals(parsed_addr: OrderedDict,
     :rtype: dict
     """
     # get the directional related keys from the current address.
-    found_directional_tags = (
-        tag for tag in parsed_addr.keys() if 'Directional' in tag
-    )
+    found_directional_tags = (tag for tag in parsed_addr.keys() if "Directional" in tag)
     found_directional_tags = list(found_directional_tags)
     for found in found_directional_tags:
         # get the original directional related value per key.
@@ -521,8 +542,7 @@ def normalize_directionals(parsed_addr: OrderedDict,
     return parsed_addr
 
 
-def normalize_street_types(parsed_addr: OrderedDict,
-                           long_hand=False) -> OrderedDict:
+def normalize_street_types(parsed_addr: OrderedDict, long_hand=False) -> OrderedDict:
     """Change street types to accepted abbreviated format.
 
     No change is made if street types do not conform to common usages per
@@ -537,7 +557,7 @@ def normalize_street_types(parsed_addr: OrderedDict,
     """
     # get the *Street*Type keys from the current parsed address.
     found_type_tags = (
-        tag for tag in parsed_addr.keys() if 'Street' in tag and 'Type' in tag
+        tag for tag in parsed_addr.keys() if "Street" in tag and "Type" in tag
     )
     for found in found_type_tags:
         street_type = parsed_addr[found]
@@ -552,8 +572,7 @@ def normalize_street_types(parsed_addr: OrderedDict,
     return parsed_addr
 
 
-def normalize_occupancy_type(parsed_addr: OrderedDict,
-                             default=None) -> OrderedDict:
+def normalize_occupancy_type(parsed_addr: OrderedDict, default=None) -> OrderedDict:
     """Change occupancy types to accepted abbreviated format.
 
     If there is an occupancy and it does not conform to one of the
@@ -569,26 +588,25 @@ def normalize_occupancy_type(parsed_addr: OrderedDict,
     :return: parsed_addr with occupancy types updated to abbreviated format.
     :rtype: dict
     """
-    default = default if default is not None else 'UNIT'
-    occupancy_type_label = 'OccupancyType'
+    default = default if default is not None else "UNIT"
+    occupancy_type_label = "OccupancyType"
     occupancy_type = parsed_addr.pop(occupancy_type_label, None)
     occupancy_type_abbr = (
         occupancy_type
         if occupancy_type in OCCUPANCY_TYPE_ABBREVIATIONS.values()
         else OCCUPANCY_TYPE_ABBREVIATIONS.get(occupancy_type)
     )
-    occupancy_id = parsed_addr.get('OccupancyIdentifier')
-    if ((occupancy_id and not occupancy_id.startswith('#'))
-            and not occupancy_type_abbr):
+    occupancy_id = parsed_addr.get("OccupancyIdentifier")
+    if (occupancy_id and not occupancy_id.startswith("#")) and not occupancy_type_abbr:
         occupancy_type_abbr = default
     if occupancy_type_abbr:
         parsed_list = list(parsed_addr.items())
         try:
-            index = parsed_list.index(('OccupancyIdentifier', occupancy_id))
+            index = parsed_list.index(("OccupancyIdentifier", occupancy_id))
         except ValueError:
             msg = (
-                'Address has an occupancy type (ie: Apt, Unit, etc) '
-                'but no occupancy identifier (ie: 101, A, etc)'
+                "Address has an occupancy type (ie: Apt, Unit, etc) "
+                "but no occupancy identifier (ie: 101, A, etc)"
             )
             raise AddressNormalizationError(msg)
         parsed_list.insert(index, (occupancy_type_label, occupancy_type_abbr))
@@ -615,14 +633,13 @@ def normalize_state(state: str | None) -> str | None:
 def normalize_city(city: str):
     city = city.split()
     for i, part in enumerate(city):
-        replacement = CITY_ABBREVIATIONS.get(part.replace('.', ''))
+        replacement = CITY_ABBREVIATIONS.get(part.replace(".", ""))
         if replacement:
             city[i] = replacement
-    return ' '.join(city)
+    return " ".join(city)
 
 
-def get_normalized_line_segment(parsed_addr: OrderedDict,
-                                line_labels: [str]) -> str:
+def get_normalized_line_segment(parsed_addr: OrderedDict, line_labels: [str]) -> str:
     """
 
     :param parsed_addr: address parsed into ordereddict per usaddress.
@@ -630,15 +647,14 @@ def get_normalized_line_segment(parsed_addr: OrderedDict,
         to the desired address segment (ie address_line_1 or address_line_2).
     :return: s/r joined values from parsed_addr corresponding to given labels.
     """
-    line_elems = [
-        elem for key, elem in parsed_addr.items() if key in line_labels
-    ]
-    line_str = ' '.join(line_elems) if line_elems else None
+    line_elems = [elem for key, elem in parsed_addr.items() if key in line_labels]
+    line_str = " ".join(line_elems) if line_elems else None
     return post_clean_addr_str(line_str)
 
 
-def get_addr_line_str(addr_dict: dict, addr_parts: [str] = None,
-                      comma_separate: bool = False) -> str:
+def get_addr_line_str(
+    addr_dict: dict, addr_parts: [str] = None, comma_separate: bool = False
+) -> str:
     """Get address 'line' elements as a single string.
 
     Combines 'address_line_1' and 'address_line_2' elements as a single string
@@ -656,10 +672,10 @@ def get_addr_line_str(addr_dict: dict, addr_parts: [str] = None,
     :rtype: str
     """
     if not addr_parts:
-        addr_parts = ['address_line_1', 'address_line_2']
+        addr_parts = ["address_line_1", "address_line_2"]
     if not isinstance(addr_parts, (list, tuple)):
-        raise TypeError('addr_parts must be a list or tuple')
-    separator = ', ' if comma_separate else ' '
+        raise TypeError("addr_parts must be a list or tuple")
+    separator = ", " if comma_separate else " "
     addr_str = separator.join(
         str(addr_dict[elem]) for elem in addr_parts if addr_dict.get(elem)
     )
@@ -669,16 +685,15 @@ def get_addr_line_str(addr_dict: dict, addr_parts: [str] = None,
 def format_address_record(address: dict) -> str:
     # type AddressRecord -> str
     """Format AddressRecord as string."""
-    address_template = Template('$address')
+    address_template = Template("$address")
     address = dict(address)
-    addr_parts = [
-        str(address[field]) for field in ADDRESS_KEYS if address.get(field)
-    ]
-    return address_template.safe_substitute(address=', '.join(addr_parts))
+    addr_parts = [str(address[field]) for field in ADDRESS_KEYS if address.get(field)]
+    return address_template.safe_substitute(address=", ".join(addr_parts))
 
 
-def get_geocoder_normalized_addr(address: dict | str,
-                                 addr_keys: [str] = ADDRESS_KEYS) -> dict:
+def get_geocoder_normalized_addr(
+    address: dict | str, addr_keys: [str] = ADDRESS_KEYS
+) -> dict:
     """Get geocoder normalized address parsed to dict with addr_keys.
 
     :param address: string or dict-like containing address data
@@ -689,18 +704,17 @@ def get_geocoder_normalized_addr(address: dict | str,
     address_line_2 = None
     geo_addr_dict = {}
     if not isinstance(address, str):
-        address_line_2 = address.get('address_line_2')
+        address_line_2 = address.get("address_line_2")
         address = get_addr_line_str(address, addr_parts=addr_keys)
     geo_resp = geocoder.google(address)
     if geo_resp.ok and geo_resp.housenumber:
         line2 = geo_resp.subpremise or address_line_2
         geo_addr_dict = {
-            'address_line_1':
-                ' '.join([geo_resp.housenumber, geo_resp.street]),
-            'address_line_2': strip_occupancy_type(line2),
-            'city': geo_resp.city,
-            'state': geo_resp.state,
-            'postal_code': geo_resp.postal
+            "address_line_1": " ".join([geo_resp.housenumber, geo_resp.street]),
+            "address_line_2": strip_occupancy_type(line2),
+            "city": geo_resp.city,
+            "state": geo_resp.state,
+            "postal_code": geo_resp.postal,
         }
         for key, value in geo_addr_dict.items():
             geo_addr_dict[key] = value.upper() if value else None
@@ -722,14 +736,14 @@ def get_ordinal_indicator(number: int) -> str:
     """
     str_num = str(number)
     digits = len(str_num)
-    if str_num[-1] == '1' and not (digits >= 2 and str_num[-2:] == '11'):
-        return 'st'
-    elif str_num[-1] == '2' and not (digits >= 2 and str_num[-2:] == '12'):
-        return 'nd'
-    elif str_num[-1] == '3' and not (digits >= 2 and str_num[-2:] == '13'):
-        return 'rd'
+    if str_num[-1] == "1" and not (digits >= 2 and str_num[-2:] == "11"):
+        return "st"
+    elif str_num[-1] == "2" and not (digits >= 2 and str_num[-2:] == "12"):
+        return "nd"
+    elif str_num[-1] == "3" and not (digits >= 2 and str_num[-2:] == "13"):
+        return "rd"
     else:
-        return 'th'
+        return "th"
 
 
 class NormalizeAddress(object):
@@ -759,6 +773,7 @@ class NormalizeAddress(object):
         directionals and street types in the output.
     :return: address dict containing parsed and normalized address values.
     """
+
     parse_address_string = staticmethod(parse_address_string)
     pre_clean_addr_str = staticmethod(pre_clean_addr_str)
     post_clean_addr_str = staticmethod(post_clean_addr_str)
@@ -766,16 +781,15 @@ class NormalizeAddress(object):
     normalize_address_components = staticmethod(normalize_address_components)
     get_parsed_values = staticmethod(get_parsed_values)
 
-    def __init__(self, address, addr_map=None, addtl_funcs=None,
-                 strict=None, long_hand=False):
+    def __init__(
+        self, address, addr_map=None, addtl_funcs=None, strict=None, long_hand=False
+    ):
         self.address = address
         self.addtl_funcs = addtl_funcs
         self.strict = True if strict is None else strict
         self.long_hand = long_hand
         if addr_map and not isinstance(self.address, str):
-            self.address = {
-                key: self.address.get(val) for key, val in addr_map.items()
-            }
+            self.address = {key: self.address.get(val) for key, val in addr_map.items()}
 
     @staticmethod
     def get_normalized_line_1(parsed_addr, line_labels=LINE1_USADDRESS_LABELS):
@@ -787,19 +801,19 @@ class NormalizeAddress(object):
 
     def normalize(self):
         if isinstance(self.address, str):
-            return self.normalize_addr_str(
-                self.address, long_hand=self.long_hand
-            )
+            return self.normalize_addr_str(self.address, long_hand=self.long_hand)
         else:
             return self.normalize_addr_dict()
 
-    def normalize_addr_str(self, addr_str,  # type: str
-                           line2=None,  # type: Optional[str]
-                           city=None,  # type: Optional[str]
-                           state=None,  # type: Optional[str]
-                           zipcode=None,  # type: Optional[str]
-                           long_hand=False
-                           ):  # noqa
+    def normalize_addr_str(
+        self,
+        addr_str,  # type: str
+        line2=None,  # type: Optional[str]
+        city=None,  # type: Optional[str]
+        state=None,  # type: Optional[str]
+        zipcode=None,  # type: Optional[str]
+        long_hand=False,
+    ):  # noqa
         # get address parsed into usaddress components.
         error = None
         parsed_addr = None
@@ -816,24 +830,29 @@ class NormalizeAddress(object):
                         # send refactored line_1 and line_2 back through
                         # processing
                         return self.normalize_addr_str(
-                            line1, line2=line2,
-                            city=city, state=state, zipcode=zipcode,
-                            long_hand=long_hand
+                            line1,
+                            line2=line2,
+                            city=city,
+                            state=state,
+                            zipcode=zipcode,
+                            long_hand=long_hand,
                         )
                     except ValueError:
                         # try a different additional processing function
                         pass
 
-        if parsed_addr and not parsed_addr.get('StreetName'):
+        if parsed_addr and not parsed_addr.get("StreetName"):
             addr_dict = dict(
-                address_line_1=addr_str, address_line_2=line2, city=city,
-                state=state, postal_code=zipcode
+                address_line_1=addr_str,
+                address_line_2=line2,
+                city=city,
+                state=state,
+                postal_code=zipcode,
             )
             full_addr = self.format_address_record(addr_dict)
             try:
                 parsed_addr = self.parse_address_string(full_addr)
-            except (usaddress.RepeatedLabelError,
-                    AmbiguousAddressError) as err:
+            except (usaddress.RepeatedLabelError, AmbiguousAddressError) as err:
                 parsed_addr = None
                 error = err
 
@@ -841,13 +860,9 @@ class NormalizeAddress(object):
             parsed_addr = self.normalize_address_components(
                 parsed_addr, long_hand=long_hand
             )
-            zipcode = self.get_parsed_values(
-                parsed_addr, zipcode, 'ZipCode', addr_str
-            )
+            zipcode = self.get_parsed_values(parsed_addr, zipcode, "ZipCode", addr_str)
             city = self.normalize_city(parsed_addr, addr_str, city)
-            state = self.get_parsed_values(
-                parsed_addr, state, 'StateName', addr_str
-            )
+            state = self.get_parsed_values(parsed_addr, state, "StateName", addr_str)
             state = normalize_state(state)
 
             # assumes if line2 is passed in that it need not be parsed from
@@ -863,8 +878,11 @@ class NormalizeAddress(object):
             line1 = addr_str
 
         addr_rec = OrderedDict(
-            address_line_1=line1, address_line_2=line2, city=city,
-            state=state, postal_code=zipcode
+            address_line_1=line1,
+            address_line_2=line2,
+            city=city,
+            state=state,
+            postal_code=zipcode,
         )
         if error:
             raise UnParseableAddressError(None, None, addr_rec)
@@ -872,36 +890,40 @@ class NormalizeAddress(object):
             return addr_rec
 
     def normalize_addr_dict(self):
-        addr_dict = validate_address_components(
-            self.address, strict=self.strict
-        )
+        addr_dict = validate_address_components(self.address, strict=self.strict)
 
         # line 1 and line 2 elements are combined to ensure consistent
         # processing whether the line 2 elements are pre-parsed or
         # included in line 1
         addr_str = get_addr_line_str(addr_dict, comma_separate=True)
-        postal_code = addr_dict.get('postal_code')
-        zipcode = validate_us_postal_code_format(
-            postal_code, addr_dict
-        ) if postal_code else None
-        city = addr_dict.get('city')
-        state = addr_dict.get('state')
+        postal_code = addr_dict.get("postal_code")
+        zipcode = (
+            validate_us_postal_code_format(postal_code, addr_dict)
+            if postal_code
+            else None
+        )
+        city = addr_dict.get("city")
+        state = addr_dict.get("state")
         try:
             address = self.normalize_addr_str(
-                addr_str, city=city, state=state,
-                zipcode=zipcode, long_hand=self.long_hand
+                addr_str,
+                city=city,
+                state=state,
+                zipcode=zipcode,
+                long_hand=self.long_hand,
             )
         except AddressNormalizationError:
             addr_str = get_addr_line_str(
                 addr_dict, comma_separate=True, addr_parts=ADDRESS_KEYS
             )
             address = self.normalize_addr_str(
-                addr_str, city=city, state=state,
-                zipcode=zipcode, long_hand=self.long_hand
+                addr_str,
+                city=city,
+                state=state,
+                zipcode=zipcode,
+                long_hand=self.long_hand,
             )
         return address
 
     def normalize_city(self, parsed_addr, addr_str, city=None):
-        return self.get_parsed_values(
-            parsed_addr, city, 'PlaceName', addr_str
-        )
+        return self.get_parsed_values(parsed_addr, city, "PlaceName", addr_str)
