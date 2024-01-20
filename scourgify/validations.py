@@ -62,20 +62,21 @@ def validate_address_components(address_dict, strict=True):
     :rtype: Mapping
     """
     locality = (
-        address_dict.get('postal_code') and
-        address_dict.get('city') and address_dict.get('state')
-        if strict else
-        address_dict.get('postal_code') or
-        (address_dict.get('city') and address_dict.get('state'))
+        address_dict.get("postal_code")
+        and address_dict.get("city")
+        and address_dict.get("state")
+        if strict
+        else address_dict.get("postal_code")
+        or (address_dict.get("city") and address_dict.get("state"))
     )
-    if not address_dict.get('address_line_1'):
-        msg = 'Address records must include Line 1 data.'
+    if not address_dict.get("address_line_1"):
+        msg = "Address records must include Line 1 data."
         raise IncompleteAddressError(msg)
     elif not locality:
         msg = (
-            'Address records must contain a city, state, and postal_code.'
-            if strict else
-            'Address records must contain a city and state, or a postal_code'
+            "Address records must contain a city, state, and postal_code."
+            if strict
+            else "Address records must contain a city and state, or a postal_code"
         )
         raise IncompleteAddressError(msg)
     return address_dict
@@ -93,28 +94,26 @@ def validate_us_postal_code_format(postal_code, address):
     :rtype: str
     """
     error = None
-    msg = (
-        'US Postal Codes must conform to five-digit Zip or Zip+4 standards.'
-    )
+    msg = "US Postal Codes must conform to five-digit Zip or Zip+4 standards."
     postal_code = post_clean_addr_str(postal_code)
-    plus_four_code = postal_code.split('-')
+    plus_four_code = postal_code.split("-")
     for code in plus_four_code:
         try:
             int(code)
         except ValueError:
             error = True
     if not error:
-        if '-' in postal_code:
-            if len(postal_code.replace('-', '')) > 9:
+        if "-" in postal_code:
+            if len(postal_code.replace("-", "")) > 9:
                 error = True
             elif len(plus_four_code) != 2:
                 error = True
             else:
-                postal_code = '-'.join([
-                    plus_four_code[0].zfill(5), plus_four_code[1].zfill(4)
-                ])
+                postal_code = "-".join(
+                    [plus_four_code[0].zfill(5), plus_four_code[1].zfill(4)]
+                )
         elif len(postal_code) == 9:
-            postal_code = '-'.join([postal_code[:5], postal_code[5:]])
+            postal_code = "-".join([postal_code[:5], postal_code[5:]])
         elif len(postal_code) > 5:
             error = True
         else:
@@ -140,7 +139,7 @@ def validate_parens_groups_parsed(line1):
     :return: line1 address string
     :rtype: str
     """
-    parenthesis_groups = _get_substrings_with_regex(line1, r'\((.+?)\)')
+    parenthesis_groups = _get_substrings_with_regex(line1, r"\((.+?)\)")
     if parenthesis_groups:
         raise AmbiguousAddressError(None, None, line1)
     else:

@@ -13,30 +13,29 @@ from scourgify.cleaning import strip_occupancy_type
 
 
 class CleaningTests(TestCase):
-
     def test_strip_occupancy_type(self):
-        expected = '33'
+        expected = "33"
 
-        line2 = 'Unit 33'
+        line2 = "Unit 33"
         result = strip_occupancy_type(line2)
         self.assertEqual(result, expected)
 
-        line2 = 'Apartment 33'
+        line2 = "Apartment 33"
         result = strip_occupancy_type(line2)
         self.assertEqual(result, expected)
 
-        line2 = 'Unit #33'
+        line2 = "Unit #33"
         result = strip_occupancy_type(line2)
         self.assertEqual(result, expected)
 
-        line2 = 'Building 3 Unit 33'
+        line2 = "Building 3 Unit 33"
         result = strip_occupancy_type(line2)
         self.assertEqual(result, expected)
 
-        line2 = 'Building 3 UN 33'
+        line2 = "Building 3 UN 33"
         result = strip_occupancy_type(line2)
         self.assertEqual(result, expected)
 
-        line2 = '33'
+        line2 = "33"
         result = strip_occupancy_type(line2)
         self.assertEqual(result, expected)
