@@ -32,7 +32,6 @@ from typing import (  # noqa # pylint: disable=unused-import
 )
 
 # Imports from Third Party Modules
-import geocoder
 import usaddress
 
 # Local Imports
@@ -676,10 +675,23 @@ def format_address_record(address: dict) -> str:
     ]
     return address_template.safe_substitute(address=', '.join(addr_parts))
 
+_GEOCODER_ERROR = (
+    "Install the `geocoder` library, eg with `python -m pip install geocoder` "
+    "to use the `get_geocoder_normalized_addr()` function"
+)
+
+def _geocode(s: str):
+    try:
+        import geocoder
+    except ImportError as e:
+        raise ImportError(_GEOCODER_ERROR) from e
+    return geocoder.google(s)
 
 def get_geocoder_normalized_addr(address: dict | str,
                                  addr_keys: [str] = ADDRESS_KEYS) -> dict:
-    """Get geocoder normalized address parsed to dict with addr_keys.
+    f"""Get geocoder normalized address parsed to dict with addr_keys.
+
+    {_GEOCODER_ERROR}
 
     :param address: string or dict-like containing address data
     :param addr_keys: optional list of address keys. standard list of keys will
@@ -691,7 +703,7 @@ def get_geocoder_normalized_addr(address: dict | str,
     if not isinstance(address, str):
         address_line_2 = address.get('address_line_2')
         address = get_addr_line_str(address, addr_parts=addr_keys)
-    geo_resp = geocoder.google(address)
+    geo_resp = _geocode(address)
     if geo_resp.ok and geo_resp.housenumber:
         line2 = geo_resp.subpremise or address_line_2
         geo_addr_dict = {
