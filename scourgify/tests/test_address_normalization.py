@@ -696,9 +696,9 @@ class TestAddressNormalizationUtils(TestCase):
             get_addr_line_str(self.address_dict, addr_parts='line1')
 
     @mock.patch(
-        'scourgify.normalize.geocoder'
+        'scourgify.normalize._geocode'
     )
-    def test_get_geocoder_normalized_addr(self, mock_geocoder):
+    def test_get_geocoder_normalized_addr(self, mock_geocode: mock.MagicMock):
         """Test get_geocoder_normalized_addr"""
         geo_addr = mock.MagicMock()
         geo_addr.ok = True
@@ -709,7 +709,7 @@ class TestAddressNormalizationUtils(TestCase):
         geo_addr.state = 'OR'
         geo_addr.postal = '97000'
 
-        mock_geocoder.google.return_value = geo_addr
+        mock_geocode.return_value = geo_addr
 
         address = {
             'address_line_1': '1234 Main',
@@ -720,7 +720,7 @@ class TestAddressNormalizationUtils(TestCase):
         }
         addr_str_return_value = "1234 Main Boring OR 97000"
         get_geocoder_normalized_addr(address)
-        mock_geocoder.google.assert_called_with(addr_str_return_value)
+        mock_geocode.assert_called_with(addr_str_return_value)
 
     def test_get_ordinal_indicator(self):
         """Test get_ordinal_indicator"""

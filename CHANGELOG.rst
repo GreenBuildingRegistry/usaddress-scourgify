@@ -1,5 +1,9 @@
 Changelog
 =========
+UNRELEASED
+------------------
+* BREAKING: Make `geocoder` an optional dependency.
+
 0.2.3 [2020-05-06]
 ------------------
 * Valid OccupancyType bug fix for OccupancyType that is already valid abbreviation
