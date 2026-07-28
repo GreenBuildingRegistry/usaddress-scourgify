@@ -116,8 +116,21 @@ STRIP_CHAR_CATS = (
 STRIP_PUNC_CATS = ('Z', 'Pd')
 STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 
+_GEOCODER_ERROR = (
+    "Install the `geocoder` library, eg with `python -m pip install geocoder` "
+    "to use the `get_geocoder_normalized_addr()` function"
+)
+
 
 # Private Functions
+
+def _geocode(s: str):
+    try:
+        import geocoder
+    except ImportError as e:
+        raise ImportError(_GEOCODER_ERROR) from e
+    return geocoder.google(s)
+
 
 # Public Classes and Functions
 
@@ -675,17 +688,6 @@ def format_address_record(address: dict) -> str:
     ]
     return address_template.safe_substitute(address=', '.join(addr_parts))
 
-_GEOCODER_ERROR = (
-    "Install the `geocoder` library, eg with `python -m pip install geocoder` "
-    "to use the `get_geocoder_normalized_addr()` function"
-)
-
-def _geocode(s: str):
-    try:
-        import geocoder
-    except ImportError as e:
-        raise ImportError(_GEOCODER_ERROR) from e
-    return geocoder.google(s)
 
 def get_geocoder_normalized_addr(address: dict | str,
                                  addr_keys: [str] = ADDRESS_KEYS) -> dict:
