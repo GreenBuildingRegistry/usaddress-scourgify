@@ -11,7 +11,7 @@ All rights reserved
 # Imports from Standard Library
 import re
 import unicodedata
-from typing import Any, Optional, Sequence, Union
+from typing import Any, Optional, Sequence
 
 # Imports from Third Party Modules
 import usaddress
@@ -48,8 +48,7 @@ STRIP_ALL_CATS = STRIP_CHAR_CATS + STRIP_PUNC_CATS
 
 # Public Classes and Functions
 
-def pre_clean_addr_str(addr_str, state=None):
-    # type: (str, Optional[str]) -> str
+def pre_clean_addr_str(addr_str: str, state: Optional[str] = None) -> str:
     """Remove any known undesirable sub-strings and special characters.
 
     Cleaning should be enacted on an addr_str to remove known characters
@@ -96,8 +95,7 @@ def pre_clean_addr_str(addr_str, state=None):
     return addr_str
 
 
-def clean_ambiguous_street_types(addr_str):
-    # type: (str) -> str
+def clean_ambiguous_street_types(addr_str: str) -> str:
     """Clean street type abbreviations treated ambiguously by usaddress.
 
     Some two char street type abbreviations (ie. CT) are treated as StateName
@@ -120,8 +118,7 @@ def clean_ambiguous_street_types(addr_str):
     return addr_str
 
 
-def post_clean_addr_str(addr_str):
-    # type: (Union[str, None], Optional[bool]) -> str
+def post_clean_addr_str(addr_str: str) -> str:
     """Remove any special chars or extra white space remaining post-processing.
 
     :param addr_str: post-processing address string.
@@ -152,8 +149,7 @@ def _parse_occupancy(addr_line_2):
     return occupancy
 
 
-def strip_occupancy_type(addr_line_2):
-    # type: (str) -> str
+def strip_occupancy_type(addr_line_2: str) -> str:
     """Strip occupancy type (ie apt, unit, etc) from addr_line_2 string
 
     :param addr_line_2: address line 2 string that may contain type
@@ -191,12 +187,11 @@ def strip_occupancy_type(addr_line_2):
     return occupancy
 
 
-def clean_upper(text,                           # type: Any
-                exclude=None,                   # type: Optional[Sequence[int]]
-                removal_cats=STRIP_CHAR_CATS,   # type: Optional[Sequence[str]]
-                strip_spaces=False              # type: Optional[bool]
-                ):
-    # type: (str, Optional[Sequence[int]], Optional[Sequence[str]]) -> str
+def clean_upper(text: Any,
+                exclude: Optional[Sequence[int]] = None,
+                removal_cats: Optional[Sequence[str]] = STRIP_CHAR_CATS,
+                strip_spaces: Optional[bool] = False
+                ) -> str:
     """
     Return text as upper case unicode string and remove unwanted characters.
     Defaults to STRIP_CHARS e.g all  whitespace, punctuation etc
