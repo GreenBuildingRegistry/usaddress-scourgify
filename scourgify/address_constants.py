@@ -571,7 +571,29 @@ STREET_TYPE_ABBREVIATIONS = {
     'WAYS': 'WAYS',
     'WELL': 'WL',
     'WELLS': 'WLS',
-    'WLS': 'WLS'
+    'WLS': 'WLS',
+    # Multi-word pre-types for state, county, and US highways
+    'STATE ROUTE': 'STATE RTE',
+    'STATE RT': 'STATE RTE',
+    'STATE RTE': 'STATE RTE',
+    'STATE HIGHWAY': 'STATE HWY',
+    'STATE HIWAY': 'STATE HWY',
+    'STATE HWY': 'STATE HWY',
+    'STATE ROAD': 'STATE RD',
+    'STATE RD': 'STATE RD',
+    'COUNTY HIGHWAY': 'COUNTY HWY',
+    'COUNTY HIWAY': 'COUNTY HWY',
+    'COUNTY HWY': 'COUNTY HWY',
+    'COUNTY ROAD': 'COUNTY RD',
+    'COUNTY RD': 'COUNTY RD',
+    'COUNTY ROUTE': 'COUNTY RTE',
+    'COUNTY RT': 'COUNTY RTE',
+    'COUNTY RTE': 'COUNTY RTE',
+    'US HIGHWAY': 'US HWY',
+    'US HWY': 'US HWY',
+    'US ROUTE': 'US RTE',
+    'US RT': 'US RTE',
+    'US RTE': 'US RTE',
 }
 
 OCCUPANCY_TYPE_ABBREVIATIONS = {
@@ -795,7 +817,16 @@ LONGHAND_STREET_TYPES = {
     'WALL': 'WALL',
     'WAY': 'WAY',
     'WL': 'WELL',
-    'WLS': 'WELLS'
+    'WLS': 'WELLS',
+    # Multi-word pre-types for state, county, and US highways
+    'STATE RTE': 'STATE ROUTE',
+    'STATE HWY': 'STATE HIGHWAY',
+    'STATE RD': 'STATE ROAD',
+    'COUNTY HWY': 'COUNTY HIGHWAY',
+    'COUNTY RD': 'COUNTY ROAD',
+    'COUNTY RTE': 'COUNTY ROUTE',
+    'US HWY': 'US HIGHWAY',
+    'US RTE': 'US ROUTE',
 }
 STATE_ABBREVIATIONS = {
     'ALABAMA': 'AL',

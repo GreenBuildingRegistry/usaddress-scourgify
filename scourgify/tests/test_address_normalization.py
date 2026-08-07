@@ -535,6 +535,113 @@ class TestAddressNormalizationUtils(TestCase):
         result = normalize_street_types(abbrev_type, long_hand=True)
         self.assertEqual(expected, result['StreetNamePostType'])
 
+        # Multi-word pre-types for state, county, and US highways
+        state_route = OrderedDict([
+            ('AddressNumber', '123'),
+            ('StreetNamePreType', 'STATE ROUTE'),
+            ('StreetName', '47')
+        ])
+        county_hwy = OrderedDict([
+            ('AddressNumber', '456'),
+            ('StreetNamePreType', 'COUNTY HIGHWAY'),
+            ('StreetName', '12')
+        ])
+        county_rd = OrderedDict([
+            ('AddressNumber', '789'),
+            ('StreetNamePreType', 'COUNTY ROAD'),
+            ('StreetName', '5')
+        ])
+        us_hwy = OrderedDict([
+            ('AddressNumber', '100'),
+            ('StreetNamePreType', 'US HIGHWAY'),
+            ('StreetName', '1')
+        ])
+
+        result = normalize_street_types(state_route)
+        self.assertEqual('STATE RTE', result['StreetNamePreType'])
+
+        result = normalize_street_types(county_hwy)
+        self.assertEqual('COUNTY HWY', result['StreetNamePreType'])
+
+        result = normalize_street_types(county_rd)
+        self.assertEqual('COUNTY RD', result['StreetNamePreType'])
+
+        result = normalize_street_types(us_hwy)
+        self.assertEqual('US HWY', result['StreetNamePreType'])
+
+        result = normalize_street_types(state_route, long_hand=True)
+        self.assertEqual('STATE ROUTE', result['StreetNamePreType'])
+
+        result = normalize_street_types(county_hwy, long_hand=True)
+        self.assertEqual('COUNTY HIGHWAY', result['StreetNamePreType'])
+
+        result = normalize_street_types(county_rd, long_hand=True)
+        self.assertEqual('COUNTY ROAD', result['StreetNamePreType'])
+
+        result = normalize_street_types(us_hwy, long_hand=True)
+        self.assertEqual('US HIGHWAY', result['StreetNamePreType'])
+
+    def test_normalize_highway_addresses(self):
+        """Test normalization of state, county, and US highway addresses."""
+        expected_abbr = dict(
+            address_line_1='123 STATE RTE 47',
+            address_line_2=None,
+            city='PORTLAND',
+            state='OR',
+            postal_code='97203'
+        )
+        result = normalize_address_record(
+            '123 State Route 47, Portland, OR, 97203'
+        )
+        self.assertDictEqual(expected_abbr, result)
+
+        result = normalize_address_record(
+            '123 State Rte 47, Portland, OR, 97203'
+        )
+        self.assertDictEqual(expected_abbr, result)
+
+        expected_long = dict(
+            address_line_1='123 STATE ROUTE 47',
+            address_line_2=None,
+            city='PORTLAND',
+            state='OR',
+            postal_code='97203'
+        )
+        result = normalize_address_record(
+            '123 State Route 47, Portland, OR, 97203', long_hand=True
+        )
+        self.assertDictEqual(expected_long, result)
+
+        result = normalize_address_record(
+            '456 County Highway 12, Portland, OR, 97203'
+        )
+        self.assertEqual('456 COUNTY HWY 12', result['address_line_1'])
+
+        result = normalize_address_record(
+            '789 County Road 5, Portland, OR, 97203'
+        )
+        self.assertEqual('789 COUNTY RD 5', result['address_line_1'])
+
+        result = normalize_address_record(
+            '100 US Highway 1, Portland, OR, 97203'
+        )
+        self.assertEqual('100 US HWY 1', result['address_line_1'])
+
+        result = normalize_address_record(
+            '200 US Route 66, Portland, OR, 97203'
+        )
+        self.assertEqual('200 US RTE 66', result['address_line_1'])
+
+        result = normalize_address_record(
+            '321 State Highway 101, Portland, OR, 97203', long_hand=True
+        )
+        self.assertEqual('321 STATE HIGHWAY 101', result['address_line_1'])
+
+        result = normalize_address_record(
+            '456 County Highway 12, Portland, OR, 97203', long_hand=True
+        )
+        self.assertEqual('456 COUNTY HIGHWAY 12', result['address_line_1'])
+
     def test_normalize_occupancy_type(self):
         """Test normalize_occupancy_type function."""
         expected = 'STE'
