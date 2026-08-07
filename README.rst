@@ -21,7 +21,7 @@ or
 
 to standardize your addresses. (Note: usaddress-scourgify does not make any attempts at address validation.)
 
-Both functions, and the class init, take an address string, or a dict-like object, and return an address dict with all field values in uppercase format mapped to the keys address_line_1, address_line_2, city, state, postal_code... code-block:: python
+Both functions, and the class init, take an address string, or a dict-like object, and return an address dict with all field values in uppercase format mapped to the keys address_line_1, address_line_2, city, state, postal_code...
 
 
 .. code-block:: python
@@ -136,6 +136,65 @@ You may also use the key `insertion_method` with a value of `update` or `replace
 
 get_geocoder_normalized_addr() uses geocoder.google to parse your address into a standard dict.  No additional cleaning is performed, so if your address contains any stray or non-conforming elements (ie: 8888 NE KILLINGSWORTH ST, UN C, PORTLAND, OR 97008), no result will be returned.
 Since geocoder accepts an address string, if your address is in dict format you will need to supply a list of the address related keys within your dict, in the order of address string composition, if your keys do not match the standard key set (address_line_1, address_line_2, city, state, postal_code)
+
+
+Multi-word street names:
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+There is a known issue with some multi-word street names, or city names that are also a steet type, (EG: '1111 Via Christina, Vista, CA 92084' or '9999 LA TORTOLA SAN DIEGO CA 92129') when parsing addresses as a single string.
+Because of the complexity of parsing these address types, the base package, `usaddress` sometimes misidentifies the city as part of the street name, or the street name as part of the city.
+The only current solution is to identify the city for prior to normalization, which means having to first break your single string into and address dict.
+
+Examples as single line:
+.. code-block:: python
+
+    addr = '9999 LA TORTOLA SAN DIEGO CA 92129'
+    {
+        'address_line_1': '12790 LA',
+        'address_line_2': None,
+        'city': 'TORTOLA SAN DIEGO',
+        'state': 'CA',
+        'postal_code': '92129'
+    }
+
+    addr = "1509 Via Christina, Vista, CA 92084"
+    {
+      "address_line_1": "1509 VIA CHRISTINA VIS",
+      "address_line_2": null,
+      "city": null,
+      "state": "CA",
+      "postal_code": "92084"
+    }
+
+
+Versus examples as addr dict:
+.. code-block:: python
+
+    addr = {
+        'address_line_1': '12790 LA TORTOLA',
+        'city': 'SAN DIEGO',
+        'state': 'CA',
+        'postal_code': '92129'
+    }
+    OrderedDict([('address_line_1', '9999 LA TORTOLA'),
+             ('address_line_2', None),
+             ('city', 'SAN DIEGO'),
+             ('state', 'CA'),
+             ('postal_code', '92129')])
+
+
+    addr = {
+      "address_line_1": "1509 Via Christina",
+      "city": 'Vista',
+      "state": "CA",
+      "postal_code": "92084"
+    }
+    OrderedDict([('address_line_1', '1509 VIA CHRISTINA'),
+             ('address_line_2', None),
+             ('city', 'VISTA'),
+             ('state', 'CA'),
+             ('postal_code', '92084')])
+
 
 Installation
 ------------

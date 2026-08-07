@@ -29,8 +29,7 @@ from scourgify.exceptions import (
 # Private Functions
 
 
-def _get_substrings_with_regex(string, pattern=None):
-    # type: (str) -> list
+def _get_substrings_with_regex(string: str, pattern=None) -> list:
     """Get substring matching regex rule.
 
     :param string: string to search for substring
@@ -46,8 +45,8 @@ def _get_substrings_with_regex(string, pattern=None):
 
 
 # Public Functions
-def validate_address_components(address_dict, strict=True):
-    # type: (Mapping[str, str]) -> Mapping[str, str]
+def validate_address_components(address_dict: Mapping[str, str], strict=True
+                                ) -> Mapping[str, str]:
     """Validate non-null values for minimally viable address elements.
 
     All addresses should have at least an address_line_1 and a postal_code
@@ -81,8 +80,8 @@ def validate_address_components(address_dict, strict=True):
     return address_dict
 
 
-def validate_us_postal_code_format(postal_code, address):
-    # type: (str, Union[str, Mapping]) -> str
+def validate_us_postal_code_format(postal_code: str,
+                                   address: Union[str, Mapping]) -> str:
     """Validate postal code conforms to US five-digit Zip or Zip+4 standards.
 
     :param postal_code: string containing US postal code data.
@@ -126,8 +125,7 @@ def validate_us_postal_code_format(postal_code, address):
         return postal_code
 
 
-def validate_parens_groups_parsed(line1):
-    # type: (str) -> str
+def validate_parens_groups_parsed(line1: str) -> str:
     """Validate any parenthesis segments have been successfully parsed.
 
     Assumes any parenthesis segments in original address string are either

@@ -251,7 +251,15 @@ class TestAddressNormalization(TestCase):
     def test_parse_address_string(self):
         """Test parse_address_string function."""
         result = parse_address_string(self.parseable_addr_str)
-        self.assertIsInstance(result, OrderedDict)
+        expected_keys = [
+            'AddressNumber', 'StreetName', 'StreetNamePostType',
+            'OccupancyType', 'OccupancyIdentifier', 'PlaceName',
+            'StateName', 'ZipCode'
+        ]
+        self.assertEqual(len(expected_keys), len(result))
+        self.assertTrue(all([
+            key in list(result.keys()) for key in expected_keys
+        ]))
 
         ambig_addr_str = 'AWBREY VILLAGE'
         with self.assertRaises(AmbiguousAddressError):
