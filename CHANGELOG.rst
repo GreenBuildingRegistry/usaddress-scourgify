@@ -1,6 +1,6 @@
 Changelog
 =========
-UNRELEASED
+0.7.0 [2026-08-07]
 ------------------
 * BREAKING: Make `geocoder` an optional dependency.
 
